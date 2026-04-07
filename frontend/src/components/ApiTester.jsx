@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
-
-const API_URL = 'https://project-itew-2onj.onrender.com';
+import { API_URL } from '../services/api';
 
 function ApiTester() {
   const [results, setResults] = useState([]);
@@ -226,7 +225,7 @@ function ApiTester() {
             <li>Verify route exists: <code className="bg-yellow-100 px-2 py-0.5 rounded">php artisan route:list --path=login</code></li>
             <li>Check user in database: <code className="bg-yellow-100 px-2 py-0.5 rounded">php artisan tinker</code></li>
             <li>Query user: <code className="bg-yellow-100 px-2 py-0.5 rounded">User::where(&apos;email&apos;, &apos;admin@ccs.edu&apos;)-&gt;first()</code></li>
-            <li>Check .env: <code className="bg-yellow-100 px-2 py-0.5 rounded">VITE_API_URL=http://localhost:8000</code></li>
+            <li>Check `.env`: <code className="bg-yellow-100 px-2 py-0.5 rounded">VITE_API_URL=https://project-itew-2onj.onrender.com</code></li>
           </ol>
         </div>
       </div>

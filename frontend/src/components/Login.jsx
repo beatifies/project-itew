@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authService } from '../services/api';
+import { authService, API_URL } from '../services/api';
 import { LogIn, Mail, Lock, AlertCircle } from 'lucide-react';
 
 function Login() {
@@ -27,7 +27,7 @@ function Login() {
       } else if (err.response?.status === 419) {
         setError('CSRF error. Please refresh the page and try again.');
       } else if (err.code === 'ERR_NETWORK') {
-        setError('Cannot connect to backend server. Make sure Laravel is running on http://localhost:8000');
+        setError(`Cannot connect to backend server (${API_URL}).`);
       } else {
         setError('An error occurred during login. Please try again.');
       }

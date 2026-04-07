@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { analyticsService } from '../services/api';
+import { analyticsService, API_URL } from '../services/api';
 import { 
   Users, 
   GraduationCap, 
@@ -42,7 +42,7 @@ function Dashboard() {
       if (err.response?.status === 401) {
         setError('Authentication required. Please login first.');
       } else if (err.code === 'ERR_NETWORK') {
-        setError('Cannot connect to backend server. Make sure Laravel is running on http://localhost:8000');
+        setError(`Cannot connect to backend server (${API_URL}).`);
       } else {
         setError('Failed to load dashboard data. Backend returned: ' + (err.response?.status || 'unknown status'));
       }
