@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8000';
+const API_URL = 'https://project-itew-2onj.onrender.com';
 
 function ApiTester() {
   const [results, setResults] = useState([]);
