@@ -22,11 +22,13 @@ class DatabaseSeeder extends Seeder
             'role' => 'admin',
         ]);
 
-        // Create test user
-        User::factory()->create([
+        // Create test user (avoid factories/Faker in production deploys)
+        User::create([
             'user_id' => 'TEST001',
             'name' => 'Test User',
             'email' => 'test@example.com',
+            'password' => bcrypt('password'),
+            'role' => 'user',
         ]);
     }
 }

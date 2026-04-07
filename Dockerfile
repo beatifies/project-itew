@@ -29,12 +29,13 @@ RUN chmod -R 775 storage bootstrap/cache
 # Create SQLite database
 RUN touch database/database.sqlite
 
-# Run migrations and seeders
-RUN php artisan migrate --force
-RUN php artisan db:seed --force
+# Don't run migrations/seeders at image build time.
+# Render (and most hosts) build images without dev dependencies (e.g., Faker),
+# and database access during build is unreliable.
 
 # Expose port
 EXPOSE 8080
 
 # Start Laravel
-CMD php artisan serve --host=0.0.0.0 --port=$PORT
+RUN chmod +x /app/render-start.sh
+CMD ["/app/render-start.sh"]
