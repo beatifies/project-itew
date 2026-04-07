@@ -26,7 +26,14 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const status = error.response?.status;
+    const requestUrl = error.config?.url || '';
+    const isAuthEndpoint = requestUrl.includes('/api/login');
+    const hasToken = Boolean(localStorage.getItem('token'));
+
+    // Avoid redirect loops: let login errors and unauthenticated public requests
+    // be handled by the calling component.
+    if (status === 401 && hasToken && !isAuthEndpoint && window.location.pathname !== '/login') {
       localStorage.removeItem('token');
       window.location.href = '/login';
     }
