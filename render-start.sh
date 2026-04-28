@@ -5,14 +5,24 @@ set -e
 PORT="${PORT:-8080}"
 
 # Clear and cache configurations at runtime (not build time)
+php artisan config:clear
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
+# Debug: Show MongoDB URI (masked password)
+if [ -n "$MONGODB_URI" ]; then
+  echo "MongoDB URI is set"
+  echo "$MONGODB_URI" | sed 's/:\([^@]*\)@/:****@/g'
+else
+  echo "WARNING: MONGODB_URI is not set!"
+fi
+
 # Run migrations/seeds only when explicitly enabled.
 # This prevents Docker image builds/deploys from failing due to missing dev deps (e.g., Faker).
 if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
-  php artisan migrate --force
+  echo "Running migrations..."
+  php artisan migrate --force --verbose
 fi
 
 if [ "${RUN_SEED:-false}" = "true" ]; then

@@ -114,7 +114,14 @@ return [
             'dsn' => env('MONGODB_URI', 'mongodb://localhost:27017'),
             'database' => env('DB_DATABASE', 'student_profiling'),
             'options' => [
+                'connectTimeoutMS' => 10000,
+                'socketTimeoutMS' => 10000,
+                'serverSelectionTryOnce' => false,
+                'serverSelectionTimeoutMS' => 10000,
                 'tls' => true,
+                'tlsAllowInvalidCertificates' => env('APP_ENV') === 'local',
+                'readPreference' => 'primaryPreferred',
+                'retryWrites' => true,
             ],
         ],
 
