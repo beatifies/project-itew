@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Schedule extends Model
 {
     protected $table = 'schedules';
-    protected $primaryKey = 'schedule_id';
+    protected $primaryKey = '_id';
+    public $incrementing = false;
+    protected $keyType = 'string';
 
     protected $fillable = [
         'course_id',

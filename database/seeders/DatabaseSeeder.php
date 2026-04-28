@@ -34,6 +34,7 @@ class DatabaseSeeder extends Seeder
         // Seed 1000+ students
         $this->call([
             StudentSeeder::class,
+            TestDataSeeder::class,
         ]);
     }
 }

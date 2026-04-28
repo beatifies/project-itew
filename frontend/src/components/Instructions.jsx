@@ -228,50 +228,75 @@ function Instructions() {
               </div>
             ) : (
               instructions.map((instruction) => {
-                const typeColors = {
-                  academic: 'bg-blue-500',
-                  administrative: 'bg-green-500',
-                  guideline: 'bg-purple-500',
-                  policy: 'bg-red-500'
-                };
-
-                const statusColors = {
-                  active: 'bg-green-100 text-green-800',
-                  draft: 'bg-yellow-100 text-yellow-800',
-                  archived: 'bg-gray-100 text-gray-800'
-                };
+                // Find the course for this instruction
+                const course = courses.find(c => c.course_id === instruction.course_id);
 
                 return (
                   <div 
-                    key={instruction.instruction_id || instruction.id}
+                    key={instruction._id || instruction.id}
                     className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all border border-gray-200 overflow-hidden group"
                   >
-                    {/* Type Badge */}
-                    <div className={`${typeColors[instruction.type] || 'bg-gray-500'} px-4 py-2`}>
-                      <span className="text-white text-xs font-semibold uppercase tracking-wide">
-                        {instruction.type}
+                    {/* Course Header */}
+                    <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3">
+                      <span className="text-white text-xs font-semibold">
+                        {course ? `${course.course_code}` : instruction.course_id}
                       </span>
+                      <h3 className="text-white font-bold text-sm mt-1">
+                        {course ? course.course_title : 'Unknown Course'}
+                      </h3>
                     </div>
 
                     {/* Instruction Content */}
                     <div className="p-4">
-                      <h3 className="font-bold text-gray-900 text-lg mb-2 line-clamp-2">
-                        {instruction.title}
-                      </h3>
-
-                      {instruction.description && (
-                        <p className="text-sm text-gray-600 mb-4 line-clamp-3">
-                          {instruction.description}
-                        </p>
+                      {/* Syllabus Preview */}
+                      {instruction.syllabus && instruction.syllabus.course_description && (
+                        <div className="mb-4">
+                          <div className="flex items-start gap-2 mb-2">
+                            <BookOpen size={16} className="text-blue-600 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <p className="text-xs font-semibold text-gray-700 mb-1">Course Description</p>
+                              <p className="text-sm text-gray-600 line-clamp-2">
+                                {instruction.syllabus.course_description}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       )}
 
-                      <div className="flex items-center gap-2 mb-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          statusColors[instruction.status] || 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {instruction.status}
-                        </span>
-                      </div>
+                      {/* Lessons Count */}
+                      {instruction.lessons && Array.isArray(instruction.lessons) && (
+                        <div className="mb-4 flex items-center gap-2 text-sm text-gray-600">
+                          <FileText size={16} className="text-green-600" />
+                          <span className="font-medium">{instruction.lessons.length} Lessons</span>
+                        </div>
+                      )}
+
+                      {/* Assessment Types */}
+                      {instruction.assessment_types && Array.isArray(instruction.assessment_types) && (
+                        <div className="mb-4">
+                          <p className="text-xs font-semibold text-gray-700 mb-2">Assessment Types:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {instruction.assessment_types.slice(0, 3).map((type, idx) => (
+                              <span key={idx} className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs">
+                                {type}
+                              </span>
+                            ))}
+                            {instruction.assessment_types.length > 3 && (
+                              <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
+                                +{instruction.assessment_types.length - 3} more
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Prerequisites */}
+                      {instruction.syllabus && instruction.syllabus.prerequisites && (
+                        <div className="mb-4 flex items-center gap-2 text-xs text-gray-600">
+                          <Tag size={14} className="text-orange-600" />
+                          <span>Prerequisites: {instruction.syllabus.prerequisites}</span>
+                        </div>
+                      )}
 
                       {/* Action Buttons */}
                       <div className="flex gap-2 pt-3 border-t border-gray-200">
@@ -283,7 +308,7 @@ function Instructions() {
                           Edit
                         </button>
                         <button
-                          onClick={() => handleDelete(instruction.id)}
+                          onClick={() => handleDelete(instruction._id || instruction.id)}
                           className="px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors text-sm font-medium"
                         >
                           <Trash2 size={16} />

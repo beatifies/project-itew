@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Event extends Model
 {
     protected $table = 'events';
-    protected $primaryKey = 'event_id';
+    protected $primaryKey = '_id';
+    public $incrementing = false;
+    protected $keyType = 'string';
 
     protected $fillable = [
         'event_name',
