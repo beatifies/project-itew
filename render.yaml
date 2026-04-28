@@ -1,0 +1,27 @@
+services:
+  # Backend Laravel API
+  - type: web
+    name: ccs-profiling-backend
+    env: docker
+    region: oregon
+    plan: free
+    buildCommand: docker build -t ccs-backend .
+    startCommand: /app/render-start.sh
+    envVars:
+      - key: APP_NAME
+        value: CCS_Profiling_System
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        generateValue: true
+      - key: DB_CONNECTION
+        value: mongodb
+      - key: RUN_MIGRATIONS
+        value: true
+      - key: RUN_SEED
+        value: false
+    healthCheckPath: /api/user
+    docker:
+      path: ./Dockerfile

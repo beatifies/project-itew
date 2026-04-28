@@ -8,6 +8,10 @@ RUN apt-get update && apt-get install -y \
     unzip \
     libsqlite3-dev
 
+# Install MongoDB extension
+RUN pecl install mongodb \
+    && docker-php-ext-enable mongodb
+
 # Install PHP extensions
 RUN docker-php-ext-install pdo pdo_sqlite
 
