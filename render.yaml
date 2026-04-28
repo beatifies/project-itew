@@ -6,7 +6,6 @@ services:
     region: oregon
     plan: free
     dockerfilePath: ./Dockerfile
-    startCommand: /app/render-start.sh
     envVars:
       - key: APP_NAME
         value: CCS_Profiling_System
