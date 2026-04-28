@@ -5,7 +5,6 @@ services:
     env: docker
     region: oregon
     plan: free
-    buildCommand: docker build -t ccs-backend .
     startCommand: /app/render-start.sh
     envVars:
       - key: APP_NAME
@@ -15,13 +14,15 @@ services:
       - key: APP_DEBUG
         value: false
       - key: APP_KEY
-        generateValue: true
+        sync: false
       - key: DB_CONNECTION
         value: mongodb
+      - key: MONGODB_URI
+        sync: false
       - key: RUN_MIGRATIONS
-        value: true
+        value: "true"
       - key: RUN_SEED
-        value: false
+        value: "false"
     healthCheckPath: /api/user
     docker:
       path: ./Dockerfile
