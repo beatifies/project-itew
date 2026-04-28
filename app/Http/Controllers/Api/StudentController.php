@@ -21,56 +21,35 @@ class StudentController extends Controller
         if ($request->has('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('personal_info.first_name', 'like', "%{$search}%")
-                  ->orWhere('personal_info.last_name', 'like', "%{$search}%")
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
                   ->orWhere('student_id', 'like', "%{$search}%")
-                  ->orWhere('academic.program', 'like', "%{$search}%");
+                  ->orWhere('program', 'like', "%{$search}%");
             });
         }
 
         // Filter by program
         if ($request->has('program')) {
-            $query->where('academic.program', $request->program);
+            $query->where('program', $request->program);
         }
 
         // Filter by year level
         if ($request->has('year_level')) {
-            $query->where('academic.year_level', (int)$request->year_level);
+            $query->where('year_level', (int)$request->year_level);
         }
 
         // Filter by academic status
         if ($request->has('academic_status')) {
-            $query->where('academic.academic_status', $request->academic_status);
+            $query->where('academic_status', $request->academic_status);
         }
 
         // Pagination
         $perPage = $request->input('per_page', 15);
         $students = $query->paginate($perPage);
 
-        // Transform data to flatten nested structure for frontend
-        $transformedData = $students->toArray();
-        $transformedData['data'] = array_map(function($student) {
-            return [
-                'id' => $student['_id'] ?? $student['id'],
-                'student_id' => $student['student_id'] ?? '',
-                'first_name' => $student['personal_info']['first_name'] ?? '',
-                'last_name' => $student['personal_info']['last_name'] ?? '',
-                'program' => $student['academic']['program'] ?? '',
-                'year_level' => $student['academic']['year_level'] ?? 1,
-                'section' => $student['academic']['section'] ?? '',
-                'gpa' => $student['academic']['gpa'] ?? null,
-                'academic_status' => $student['academic']['academic_status'] ?? 'active',
-                'enrollment_status' => $student['academic']['enrollment_status'] ?? 'enrolled',
-                'personal_info' => $student['personal_info'] ?? [],
-                'academic' => $student['academic'] ?? [],
-                'skills' => $student['skills'] ?? [],
-                'affiliations' => $student['affiliations'] ?? [],
-            ];
-        }, $students->items());
-
         return response()->json([
             'success' => true,
-            'data' => $transformedData,
+            'data' => $students,
             'last_page' => $students->lastPage(),
             'current_page' => $students->currentPage(),
             'total' => $students->total()
@@ -86,38 +65,30 @@ class StudentController extends Controller
 
         // Filter by skills
         if ($request->has('skill')) {
-            $query->where('skills', 'elemMatch', ['name' => $request->skill]);
-        }
-
-        // Filter by affiliation type and name
-        if ($request->has('affiliation_type') && $request->has('affiliation_name')) {
-            $query->where('affiliations', 'elemMatch', [
-                'type' => $request->affiliation_type,
-                'name' => $request->affiliation_name
-            ]);
+            $query->whereJsonContains('special_skills', $request->skill);
         }
 
         // Filter by GPA range
         if ($request->has('gpa_min')) {
-            $query->where('academic.gpa', '>=', (float)$request->gpa_min);
+            $query->where('gpa', '>=', (float)$request->gpa_min);
         }
         if ($request->has('gpa_max')) {
-            $query->where('academic.gpa', '<=', (float)$request->gpa_max);
+            $query->where('gpa', '<=', (float)$request->gpa_max);
         }
 
         // Filter by academic status
         if ($request->has('academic_status')) {
-            $query->where('academic.academic_status', $request->academic_status);
+            $query->where('academic_status', $request->academic_status);
         }
 
         // Filter by year level
         if ($request->has('year_level')) {
-            $query->where('academic.year_level', (int)$request->year_level);
+            $query->where('year_level', (int)$request->year_level);
         }
 
         // Filter by program
         if ($request->has('program')) {
-            $query->where('academic.program', $request->program);
+            $query->where('program', $request->program);
         }
 
         // Filter by discipline status
@@ -127,40 +98,15 @@ class StudentController extends Controller
 
         // Filter students with clean record (no violations)
         if ($request->has('clean_record') && $request->clean_record === 'true') {
-            $query->where(function($q) {
-                $q->whereNull('violations')
-                  ->orWhere('violations', []);
-            });
+            $query->where('discipline_status', 'clean');
         }
 
         $perPage = $request->input('per_page', 20);
         $students = $query->paginate($perPage);
 
-        // Transform data
-        $transformedData = [];
-        foreach ($students->items() as $student) {
-            $transformedData[] = [
-                'id' => $student['_id'] ?? $student['id'],
-                'student_id' => $student['student_id'] ?? '',
-                'first_name' => $student['personal_info']['first_name'] ?? '',
-                'last_name' => $student['personal_info']['last_name'] ?? '',
-                'program' => $student['academic']['program'] ?? '',
-                'year_level' => $student['academic']['year_level'] ?? 1,
-                'section' => $student['academic']['section'] ?? '',
-                'gpa' => $student['academic']['gpa'] ?? null,
-                'academic_status' => $student['academic']['academic_status'] ?? 'active',
-                'enrollment_status' => $student['academic']['enrollment_status'] ?? 'enrolled',
-            ];
-        }
-
         return response()->json([
             'success' => true,
-            'data' => [
-                'data' => $transformedData,
-                'last_page' => $students->lastPage(),
-                'current_page' => $students->currentPage(),
-                'total' => $students->total()
-            ],
+            'data' => $students,
             'filters_applied' => $request->all()
         ]);
     }
@@ -170,7 +116,7 @@ class StudentController extends Controller
      */
     public function queryBySkill(string $skill): JsonResponse
     {
-        $students = Student::withSkill($skill)->get();
+        $students = Student::hasSkill($skill)->get();
 
         return response()->json([
             'success' => true,
@@ -180,12 +126,10 @@ class StudentController extends Controller
         ]);
     }
 
-    /**
-     * Query students by affiliation
-     */
     public function queryByAffiliation(string $type, string $name): JsonResponse
     {
-        $students = Student::withAffiliation($type, $name)->get();
+        // For backward compatibility - now searches club_memberships
+        $students = Student::whereJsonContains('club_memberships', $name)->get();
 
         return response()->json([
             'success' => true,
@@ -207,12 +151,20 @@ class StudentController extends Controller
             'student_id' => 'required|string|unique:students,student_id',
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'program' => 'required|string',
+            'program' => 'required|in:BS Information Technology,BS Computer Science',
             'year_level' => 'required|integer|between:1,5',
             'section' => 'required|string',
             'gpa' => 'nullable|numeric|between:0,5',
             'academic_status' => 'required|in:active,probation,graduated,dropped',
             'enrollment_status' => 'required|in:enrolled,irregular,graduated,dropped',
+            'honors' => 'nullable|array',
+            'scholarship' => 'nullable|array',
+            'special_skills' => 'nullable|array',
+            'certifications' => 'nullable|array',
+            'club_memberships' => 'nullable|array',
+            'officer_role' => 'nullable|string',
+            'attendance_status' => 'nullable|in:excellent,good,fair,poor',
+            'discipline_status' => 'nullable|in:clean,minor_violation,major_violation',
         ]);
 
         if ($validator->fails()) {
@@ -222,45 +174,12 @@ class StudentController extends Controller
             ], 422);
         }
 
-        // Convert flat data to nested structure
-        $studentData = [
-            'student_id' => $request->student_id,
-            'personal_info' => [
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-            ],
-            'academic' => [
-                'program' => $request->program,
-                'year_level' => (int)$request->year_level,
-                'section' => $request->section,
-                'gpa' => $request->gpa ? (float)$request->gpa : null,
-                'academic_status' => $request->academic_status,
-                'enrollment_status' => $request->enrollment_status,
-            ],
-            'skills' => [],
-            'affiliations' => [],
-            'activities' => [],
-            'violations' => [],
-        ];
+        $student = Student::create($request->all());
 
-        $student = Student::create($studentData);
-
-        // Return flattened data
         return response()->json([
             'success' => true,
             'message' => 'Student created successfully',
-            'data' => [
-                'id' => $student->_id,
-                'student_id' => $student->student_id,
-                'first_name' => $student->personal_info['first_name'],
-                'last_name' => $student->personal_info['last_name'],
-                'program' => $student->academic['program'],
-                'year_level' => $student->academic['year_level'],
-                'section' => $student->academic['section'],
-                'gpa' => $student->academic['gpa'],
-                'academic_status' => $student->academic['academic_status'],
-                'enrollment_status' => $student->academic['enrollment_status'],
-            ]
+            'data' => $student
         ], 201);
     }
 
@@ -305,12 +224,20 @@ class StudentController extends Controller
         $validator = Validator::make($request->all(), [
             'first_name' => 'sometimes|required|string|max:255',
             'last_name' => 'sometimes|required|string|max:255',
-            'program' => 'sometimes|required|string',
+            'program' => 'sometimes|required|in:BS Information Technology,BS Computer Science',
             'year_level' => 'sometimes|required|integer|between:1,5',
             'section' => 'sometimes|required|string',
             'gpa' => 'nullable|numeric|between:0,5',
             'academic_status' => 'sometimes|required|in:active,probation,graduated,dropped',
             'enrollment_status' => 'sometimes|required|in:enrolled,irregular,graduated,dropped',
+            'honors' => 'sometimes|nullable|array',
+            'scholarship' => 'sometimes|nullable|array',
+            'special_skills' => 'sometimes|nullable|array',
+            'certifications' => 'sometimes|nullable|array',
+            'club_memberships' => 'sometimes|nullable|array',
+            'officer_role' => 'sometimes|nullable|string',
+            'attendance_status' => 'sometimes|nullable|in:excellent,good,fair,poor',
+            'discipline_status' => 'sometimes|nullable|in:clean,minor_violation,major_violation',
         ]);
 
         if ($validator->fails()) {
@@ -320,51 +247,12 @@ class StudentController extends Controller
             ], 422);
         }
 
-        // Update nested structure
-        $updateData = [];
-        if ($request->has('first_name')) {
-            $updateData['personal_info.first_name'] = $request->first_name;
-        }
-        if ($request->has('last_name')) {
-            $updateData['personal_info.last_name'] = $request->last_name;
-        }
-        if ($request->has('program')) {
-            $updateData['academic.program'] = $request->program;
-        }
-        if ($request->has('year_level')) {
-            $updateData['academic.year_level'] = (int)$request->year_level;
-        }
-        if ($request->has('section')) {
-            $updateData['academic.section'] = $request->section;
-        }
-        if ($request->has('gpa')) {
-            $updateData['academic.gpa'] = (float)$request->gpa;
-        }
-        if ($request->has('academic_status')) {
-            $updateData['academic.academic_status'] = $request->academic_status;
-        }
-        if ($request->has('enrollment_status')) {
-            $updateData['academic.enrollment_status'] = $request->enrollment_status;
-        }
+        $student->update($request->all());
 
-        $student->update($updateData);
-
-        // Return flattened data
         return response()->json([
             'success' => true,
             'message' => 'Student updated successfully',
-            'data' => [
-                'id' => $student->_id,
-                'student_id' => $student->student_id,
-                'first_name' => $student->personal_info['first_name'],
-                'last_name' => $student->personal_info['last_name'],
-                'program' => $student->academic['program'],
-                'year_level' => $student->academic['year_level'],
-                'section' => $student->academic['section'],
-                'gpa' => $student->academic['gpa'],
-                'academic_status' => $student->academic['academic_status'],
-                'enrollment_status' => $student->academic['enrollment_status'],
-            ]
+            'data' => $student
         ]);
     }
 

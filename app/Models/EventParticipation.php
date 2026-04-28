@@ -7,8 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EventParticipation extends Model
 {
-    protected $table = 'event_participations';
+    protected $connection = 'mongodb';
+    protected $collection = 'event_participations';
     protected $primaryKey = 'participation_id';
+    public $incrementing = false;
+    protected $keyType = 'string';
 
     protected $fillable = [
         'event_id',
@@ -18,9 +21,13 @@ class EventParticipation extends Model
         'attendance_status',
     ];
 
+    protected $casts = [
+        'event_id' => 'integer',
+    ];
+
     public function event(): BelongsTo
     {
-        return $this->belongsTo(Event::class, 'event_id');
+        return $this->belongsTo(Event::class, 'event_id', 'event_id');
     }
 
     public function student(): BelongsTo

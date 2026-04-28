@@ -247,6 +247,33 @@ export const analyticsService = {
   },
 };
 
+export const eventParticipationService = {
+  getAll: async (params = {}) => {
+    const response = await api.get('/api/event-participations', { params });
+    return response.data;
+  },
+  
+  get: async (id) => {
+    const response = await api.get(`/api/event-participations/${id}`);
+    return response.data;
+  },
+  
+  create: async (data) => {
+    const response = await api.post('/api/event-participations', data);
+    return response.data;
+  },
+  
+  update: async (id, data) => {
+    const response = await api.put(`/api/event-participations/${id}`, data);
+    return response.data;
+  },
+  
+  delete: async (id) => {
+    const response = await api.delete(`/api/event-participations/${id}`);
+    return response.data;
+  },
+};
+
 // Aliases for backwards compatibility
 export const apiService = {
   getStudents: studentService.getAll,

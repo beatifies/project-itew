@@ -18,6 +18,9 @@ function Faculty() {
     first_name: '',
     last_name: '',
     degrees: [],
+    certifications: [],
+    expertise_area: [],
+    research_area: [],
     ccs_role: '',
     employment_status: 'full_time'
   });
@@ -58,6 +61,9 @@ function Faculty() {
         first_name: member.first_name || '',
         last_name: member.last_name || '',
         degrees: member.degrees || [],
+        certifications: member.certifications || [],
+        expertise_area: member.expertise_area || [],
+        research_area: member.research_area || [],
         ccs_role: member.ccs_role || '',
         employment_status: member.employment_status || 'full_time'
       });
@@ -68,6 +74,9 @@ function Faculty() {
         first_name: '',
         last_name: '',
         degrees: [''],
+        certifications: [],
+        expertise_area: [],
+        research_area: [],
         ccs_role: '',
         employment_status: 'full_time'
       });
@@ -392,6 +401,123 @@ function Faculty() {
                       >
                         <Plus size={16} /> Add Another Degree
                       </button>
+                    </div>
+
+                    {/* Certifications */}
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Certifications</label>
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {formData.certifications?.map((cert, index) => (
+                          <span key={index} className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                            {cert}
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                const updated = [...formData.certifications];
+                                updated.splice(index, 1);
+                                setFormData({...formData, certifications: updated});
+                              }}
+                              className="text-red-500 hover:text-red-700 font-bold"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Add certification and press Enter"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' && e.target.value.trim()) {
+                            e.preventDefault();
+                            const newCert = e.target.value.trim();
+                            setFormData({
+                              ...formData, 
+                              certifications: [...(formData.certifications || []), newCert]
+                            });
+                            e.target.value = '';
+                          }
+                        }}
+                      />
+                    </div>
+
+                    {/* Expertise Areas */}
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Expertise Areas</label>
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {formData.expertise_area?.map((area, index) => (
+                          <span key={index} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                            {area}
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                const updated = [...formData.expertise_area];
+                                updated.splice(index, 1);
+                                setFormData({...formData, expertise_area: updated});
+                              }}
+                              className="text-red-500 hover:text-red-700 font-bold"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Add expertise area and press Enter"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' && e.target.value.trim()) {
+                            e.preventDefault();
+                            const newArea = e.target.value.trim();
+                            setFormData({
+                              ...formData, 
+                              expertise_area: [...(formData.expertise_area || []), newArea]
+                            });
+                            e.target.value = '';
+                          }
+                        }}
+                      />
+                    </div>
+
+                    {/* Research Areas */}
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Research Areas</label>
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {formData.research_area?.map((area, index) => (
+                          <span key={index} className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                            {area}
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                const updated = [...formData.research_area];
+                                updated.splice(index, 1);
+                                setFormData({...formData, research_area: updated});
+                              }}
+                              className="text-red-500 hover:text-red-700 font-bold"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Add research area and press Enter"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' && e.target.value.trim()) {
+                            e.preventDefault();
+                            const newArea = e.target.value.trim();
+                            setFormData({
+                              ...formData, 
+                              research_area: [...(formData.research_area || []), newArea]
+                            });
+                            e.target.value = '';
+                          }
+                        }}
+                      />
                     </div>
                   </div>
 

@@ -1,9 +1,20 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Menu, Bell, User, Search } from 'lucide-react';
 
 const Header = ({ toggleSidebar, title }) => {
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      const currentPath = window.location.pathname;
+      navigate(`${currentPath}?search=${encodeURIComponent(searchTerm)}`);
+    }
+  };
 
   return (
     <header className="bg-white shadow-md border-b border-orange-200 sticky top-0 z-10">
@@ -23,14 +34,18 @@ const Header = ({ toggleSidebar, title }) => {
         {/* Right Side */}
         <div className="flex items-center gap-4">
           {/* Search Bar */}
-          <div className="hidden md:flex items-center bg-gray-100 rounded-lg px-4 py-2">
-            <Search size={18} className="text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search..."
-              className="bg-transparent border-none outline-none ml-2 text-gray-700 w-64"
-            />
-          </div>
+          <form onSubmit={handleSearch} className="hidden md:flex items-center">
+            <div className="flex items-center bg-gray-100 rounded-lg px-4 py-2">
+              <Search size={18} className="text-gray-400" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search..."
+                className="bg-transparent border-none outline-none ml-2 text-gray-700 w-64"
+              />
+            </div>
+          </form>
 
           {/* Notifications */}
           <div className="relative">

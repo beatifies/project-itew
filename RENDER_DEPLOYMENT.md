@@ -19,8 +19,11 @@
 4. Whitelist all IP addresses (0.0.0.0/0) for free tier
 5. Get your connection string (IMPORTANT - must include TLS parameters):
    ```
-   mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/student_profiling?retryWrites=true&w=majority&tls=true
+   mongodb+srv://<username>:<password>@cluster-name.region.mongodb.net/student_profiling?retryWrites=true&w=majority&tls=true
    ```
+   
+   **CRITICAL:** Use ONLY the base cluster hostname (e.g., `ac-ypjmann.kpcar11.mongodb.net`), NOT the individual shard hostnames. The `+srv` protocol automatically discovers all shards.
+   
 6. **IMPORTANT:** Make sure your cluster supports TLS 1.2 or higher (all Atlas clusters do by default)
 
 ### Step 2: Push Code to GitHub
@@ -166,13 +169,16 @@ In Render dashboard:
 **Solutions:**
 1. Verify `MONGODB_URI` is correct in Render env vars
 2. **CRITICAL:** Ensure your MONGODB_URI includes `?tls=true` parameter
-3. Check MongoDB Atlas IP whitelist includes `0.0.0.0/0`
-4. Verify database user has read/write permissions
-5. Test connection string locally first
-6. Make sure your MongoDB Atlas cluster supports TLS 1.2+ (all modern clusters do)
-7. The connection string should look like:
+3. **IMPORTANT:** If using `mongodb+srv://`, use ONLY the base cluster hostname, NOT multiple shard hosts
+   - ✅ CORRECT: `mongodb+srv://user:pass@ac-ypjmann.kpcar11.mongodb.net/student_profiling?tls=true`
+   - ❌ WRONG: `mongodb+srv://user:pass@host1,host2,host3/student_profiling?tls=true`
+4. Check MongoDB Atlas IP whitelist includes `0.0.0.0/0`
+5. Verify database user has read/write permissions
+6. Test connection string locally first
+7. Make sure your MongoDB Atlas cluster supports TLS 1.2+ (all modern clusters do)
+8. The connection string should look like:
    ```
-   mongodb+srv://username:password@cluster.mongodb.net/student_profiling?retryWrites=true&w=majority&tls=true
+   mongodb+srv://username:password@cluster-name.region.mongodb.net/student_profiling?retryWrites=true&w=majority&tls=true
    ```
 
 ### Issue: "Migrations failed"

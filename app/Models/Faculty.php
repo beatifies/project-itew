@@ -18,8 +18,8 @@ class Faculty extends Model
         'last_name',
         'degrees',
         'certifications',
-        'expertise_areas',
-        'research_areas',
+        'expertise_area',
+        'research_area',
         'ccs_role',
         'teaching_load',
         'employment_status',
@@ -28,8 +28,8 @@ class Faculty extends Model
     protected $casts = [
         'degrees' => 'array',
         'certifications' => 'array',
-        'expertise_areas' => 'array',
-        'research_areas' => 'array',
+        'expertise_area' => 'array',
+        'research_area' => 'array',
         'teaching_load' => 'integer',
     ];
 

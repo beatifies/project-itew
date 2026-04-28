@@ -39,7 +39,15 @@ function Students() {
     section: '',
     gpa: '',
     academic_status: 'active',
-    enrollment_status: 'enrolled'
+    enrollment_status: 'enrolled',
+    honors: [],
+    scholarship: [],
+    special_skills: [],
+    certifications: [],
+    club_memberships: [],
+    officer_role: '',
+    attendance_status: 'good',
+    discipline_status: 'clean'
   });
 
   const programs = [
@@ -157,7 +165,15 @@ function Students() {
         section: student.section || '',
         gpa: student.gpa || '',
         academic_status: student.academic_status || 'active',
-        enrollment_status: student.enrollment_status || 'enrolled'
+        enrollment_status: student.enrollment_status || 'enrolled',
+        honors: student.honors || [],
+        scholarship: student.scholarship || [],
+        special_skills: student.special_skills || [],
+        certifications: student.certifications || [],
+        club_memberships: student.club_memberships || [],
+        officer_role: student.officer_role || '',
+        attendance_status: student.attendance_status || 'good',
+        discipline_status: student.discipline_status || 'clean'
       });
     } else {
       setEditingStudent(null);
@@ -170,7 +186,15 @@ function Students() {
         section: '',
         gpa: '',
         academic_status: 'active',
-        enrollment_status: 'enrolled'
+        enrollment_status: 'enrolled',
+        honors: [],
+        scholarship: [],
+        special_skills: [],
+        certifications: [],
+        club_memberships: [],
+        officer_role: '',
+        attendance_status: 'good',
+        discipline_status: 'clean'
       });
     }
     setShowModal(true);
@@ -215,6 +239,26 @@ function Students() {
     }
   };
 
+  const handleSearch = async (searchTerm) => {
+    setSearchTerm(searchTerm);
+    try {
+      setLoading(true);
+      const response = await apiService.getStudents({ 
+        search: searchTerm,
+        per_page: 50 
+      });
+      const studentsData = response.data?.data || response.data || [];
+      setStudents(Array.isArray(studentsData) ? studentsData : []);
+      groupStudents(studentsData);
+      setError(null);
+    } catch (err) {
+      console.error('Search error:', err);
+      setError('Failed to search students.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getTotalStudents = () => {
     let total = 0;
     Object.values(groupedStudents).forEach(programs => {
@@ -256,6 +300,13 @@ function Students() {
               <p className="text-gray-600">Comprehensive student profiling system</p>
             </div>
             <div className="flex gap-3">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+                placeholder="Search students by name, ID, or program..."
+                className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 w-64"
+              />
               <button
                 onClick={() => setShowFilter(!showFilter)}
                 className="flex items-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all shadow-lg"
@@ -655,6 +706,246 @@ function Students() {
                         <option value="graduated">Graduated</option>
                         <option value="dropped">Dropped</option>
                       </select>
+                    </div>
+                  </div>
+
+                  {/* Array Fields - Tag Inputs */}
+                  <div className="border-t pt-4 mt-4">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Additional Information</h3>
+                    
+                    {/* Honors */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Honors</label>
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {formData.honors?.map((honor, index) => (
+                          <span key={index} className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                            {honor}
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                const updated = [...formData.honors];
+                                updated.splice(index, 1);
+                                setFormData({...formData, honors: updated});
+                              }}
+                              className="text-red-500 hover:text-red-700 font-bold"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Add honor and press Enter"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' && e.target.value.trim()) {
+                            e.preventDefault();
+                            const newHonor = e.target.value.trim();
+                            setFormData({
+                              ...formData, 
+                              honors: [...(formData.honors || []), newHonor]
+                            });
+                            e.target.value = '';
+                          }
+                        }}
+                      />
+                    </div>
+
+                    {/* Scholarship */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Scholarship</label>
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {formData.scholarship?.map((scholar, index) => (
+                          <span key={index} className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                            {scholar}
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                const updated = [...formData.scholarship];
+                                updated.splice(index, 1);
+                                setFormData({...formData, scholarship: updated});
+                              }}
+                              className="text-red-500 hover:text-red-700 font-bold"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Add scholarship and press Enter"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' && e.target.value.trim()) {
+                            e.preventDefault();
+                            const newScholar = e.target.value.trim();
+                            setFormData({
+                              ...formData, 
+                              scholarship: [...(formData.scholarship || []), newScholar]
+                            });
+                            e.target.value = '';
+                          }
+                        }}
+                      />
+                    </div>
+
+                    {/* Special Skills */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Special Skills</label>
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {formData.special_skills?.map((skill, index) => (
+                          <span key={index} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                            {skill}
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                const updated = [...formData.special_skills];
+                                updated.splice(index, 1);
+                                setFormData({...formData, special_skills: updated});
+                              }}
+                              className="text-red-500 hover:text-red-700 font-bold"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Add skill and press Enter"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' && e.target.value.trim()) {
+                            e.preventDefault();
+                            const newSkill = e.target.value.trim();
+                            setFormData({
+                              ...formData, 
+                              special_skills: [...(formData.special_skills || []), newSkill]
+                            });
+                            e.target.value = '';
+                          }
+                        }}
+                      />
+                    </div>
+
+                    {/* Certifications */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Certifications</label>
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {formData.certifications?.map((cert, index) => (
+                          <span key={index} className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                            {cert}
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                const updated = [...formData.certifications];
+                                updated.splice(index, 1);
+                                setFormData({...formData, certifications: updated});
+                              }}
+                              className="text-red-500 hover:text-red-700 font-bold"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Add certification and press Enter"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' && e.target.value.trim()) {
+                            e.preventDefault();
+                            const newCert = e.target.value.trim();
+                            setFormData({
+                              ...formData, 
+                              certifications: [...(formData.certifications || []), newCert]
+                            });
+                            e.target.value = '';
+                          }
+                        }}
+                      />
+                    </div>
+
+                    {/* Club Memberships */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Club Memberships</label>
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {formData.club_memberships?.map((club, index) => (
+                          <span key={index} className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                            {club}
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                const updated = [...formData.club_memberships];
+                                updated.splice(index, 1);
+                                setFormData({...formData, club_memberships: updated});
+                              }}
+                              className="text-red-500 hover:text-red-700 font-bold"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Add club membership and press Enter"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' && e.target.value.trim()) {
+                            e.preventDefault();
+                            const newClub = e.target.value.trim();
+                            setFormData({
+                              ...formData, 
+                              club_memberships: [...(formData.club_memberships || []), newClub]
+                            });
+                            e.target.value = '';
+                          }
+                        }}
+                      />
+                    </div>
+
+                    {/* Officer Role */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Officer Role</label>
+                      <input
+                        type="text"
+                        value={formData.officer_role}
+                        onChange={(e) => setFormData({...formData, officer_role: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        placeholder="e.g., President, Treasurer"
+                      />
+                    </div>
+
+                    {/* Attendance & Discipline Status */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Attendance Status</label>
+                        <select
+                          value={formData.attendance_status}
+                          onChange={(e) => setFormData({...formData, attendance_status: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        >
+                          <option value="good">Good</option>
+                          <option value="warning">Warning</option>
+                          <option value="poor">Poor</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Discipline Status</label>
+                        <select
+                          value={formData.discipline_status}
+                          onChange={(e) => setFormData({...formData, discipline_status: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        >
+                          <option value="clean">Clean</option>
+                          <option value="warning">Warning</option>
+                          <option value="violation">Violation</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
 

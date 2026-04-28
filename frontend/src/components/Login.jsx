@@ -18,7 +18,16 @@ function Login() {
     setLoading(true);
 
     try {
-      await authService.login(formData.email, formData.password);
+      const response = await authService.login(formData.email, formData.password);
+      // Store user role and IDs
+      localStorage.setItem('userRole', response.user.role);
+      localStorage.setItem('userId', response.user.id);
+      if (response.user.student_id) {
+        localStorage.setItem('studentId', response.user.student_id);
+      }
+      if (response.user.faculty_id) {
+        localStorage.setItem('facultyId', response.user.faculty_id);
+      }
       navigate('/');
     } catch (err) {
       console.error('Login error:', err);

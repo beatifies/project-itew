@@ -19,17 +19,35 @@ import {
 const Sidebar = ({ isOpen, toggleSidebar }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const userRole = localStorage.getItem('userRole') || 'student';
 
-  const menuItems = [
-    { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/students', icon: Users, label: 'Students' },
-    { path: '/faculty', icon: GraduationCap, label: 'Faculty' },
-    { path: '/courses', icon: BookOpen, label: 'Courses' },
-    { path: '/instructions', icon: FileText, label: 'Instructions' },
-    { path: '/schedules', icon: Calendar, label: 'Schedules' },
-    { path: '/events', icon: Calendar, label: 'Events' },
-    { path: '/analytics', icon: BarChart3, label: 'Analytics' },
-  ];
+  const menuItemsByRole = {
+    admin: [
+      { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
+      { path: '/students', icon: Users, label: 'Students' },
+      { path: '/faculty', icon: GraduationCap, label: 'Faculty' },
+      { path: '/courses', icon: BookOpen, label: 'Courses' },
+      { path: '/instructions', icon: FileText, label: 'Instructions' },
+      { path: '/schedules', icon: Calendar, label: 'Schedules' },
+      { path: '/events', icon: Calendar, label: 'Events' },
+      { path: '/analytics', icon: BarChart3, label: 'Analytics' },
+    ],
+    faculty: [
+      { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
+      { path: '/students', icon: Users, label: 'Students' },
+      { path: '/courses', icon: BookOpen, label: 'Courses' },
+      { path: '/instructions', icon: FileText, label: 'Instructions' },
+      { path: '/schedules', icon: Calendar, label: 'Schedules' },
+      { path: '/events', icon: Calendar, label: 'Events' },
+      { path: '/analytics', icon: BarChart3, label: 'Analytics' },
+    ],
+    student: [
+      { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
+      { path: '/events', icon: Calendar, label: 'Events' },
+    ],
+  };
+
+  const menuItems = menuItemsByRole[userRole] || menuItemsByRole.student;
 
   const handleLogout = () => {
     localStorage.removeItem('token');

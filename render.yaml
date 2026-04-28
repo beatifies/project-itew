@@ -27,7 +27,7 @@ services:
       - key: RUN_MIGRATIONS
         value: "true"
       - key: RUN_SEED
-        value: "false"
+        value: "true"
       - key: MONGO_TLS_ALLOW_INVALID_CERTS
         value: "true"
       - key: CACHE_DRIVER

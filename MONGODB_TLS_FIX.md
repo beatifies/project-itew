@@ -36,13 +36,15 @@ Added TLS options to the MongoDB connection configuration:
 3. Choose **Connect your application**
 4. Copy the connection string (it looks like this):
    ```
-   mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority
+   mongodb+srv://<username>:<password>@cluster-name.region.mongodb.net/?retryWrites=true&w=majority
    ```
 
 5. **IMPORTANT:** Add your database name and TLS parameter:
    ```
-   mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/student_profiling?retryWrites=true&w=majority&tls=true
+   mongodb+srv://username:password@cluster-name.region.mongodb.net/student_profiling?retryWrites=true&w=majority&tls=true
    ```
+
+**CRITICAL:** Use ONLY the base cluster hostname (e.g., `ac-ypjmann.kpcar11.mongodb.net`), NOT the individual shard hostnames (e.g., `ac-ypjmann-shard-00-00.kpcar11.mongodb.net`). The `+srv` protocol automatically discovers all shards.
 
 #### Step 2: Update Render Environment Variables
 
@@ -52,8 +54,10 @@ Added TLS options to the MongoDB connection configuration:
 4. Find or add the `MONGODB_URI` variable
 5. Set it to your full connection string with TLS:
    ```
-   mongodb+srv://your_username:your_password@ac-ypjmann-shard-00-00.kpcar11.mongodb.net,ac-ypjmann-shard-00-01.kpcar11.mongodb.net,ac-ypjmann-shard-00-02.kpcar11.mongodb.net/student_profiling?retryWrites=true&w=majority&tls=true
+   mongodb+srv://your_username:your_password@ac-ypjmann.kpcar11.mongodb.net/student_profiling?retryWrites=true&w=majority&tls=true
    ```
+
+**NOTE:** Use the base cluster hostname `ac-ypjmann.kpcar11.mongodb.net`, NOT the shard hostnames.
 
 6. Click **Save Changes**
 
@@ -83,14 +87,26 @@ curl https://YOUR-SERVICE.onrender.com/api/analytics
 
 Your `MONGODB_URI` on Render should look EXACTLY like this (replace with your actual values):
 
+### For mongodb+srv:// (MongoDB Atlas - RECOMMENDED)
 ```
-mongodb+srv://myusername:MyP@ssw0rd123@ac-ypjmann-shard-00-00.kpcar11.mongodb.net,ac-ypjmann-shard-00-01.kpcar11.mongodb.net,ac-ypjmann-shard-00-02.kpcar11.mongodb.net/student_profiling?retryWrites=true&w=majority&tls=true
+mongodb+srv://myusername:MyP%40ssw0rd123@ac-ypjmann.kpcar11.mongodb.net/student_profiling?retryWrites=true&w=majority&tls=true
+```
+
+**IMPORTANT:** When using `mongodb+srv://`, use ONLY the base cluster hostname (NOT the individual shards):
+- ✅ CORRECT: `ac-ypjmann.kpcar11.mongodb.net`
+- ❌ WRONG: `ac-ypjmann-shard-00-00.kpcar11.mongodb.net,ac-ypjmann-shard-00-01.kpcar11.mongodb.net,...`
+
+The `+srv` protocol automatically discovers all shards via DNS.
+
+### For mongodb:// (Self-hosted MongoDB)
+```
+mongodb://host1:27017,host2:27017,host3:27017/student_profiling?tls=true
 ```
 
 ### Breaking it down:
-- `mongodb+srv://` - Protocol (required for Atlas)
+- `mongodb+srv://` - Protocol (required for MongoDB Atlas)
 - `username:password@` - Your MongoDB Atlas credentials
-- `ac-ypjmann-shard-00-00.kpcar11.mongodb.net,...` - Your cluster hosts (from Atlas)
+- `ac-ypjmann.kpcar11.mongodb.net` - Your cluster hostname (from Atlas, WITHOUT shard numbers)
 - `/student_profiling` - Database name
 - `?retryWrites=true&w=majority&tls=true` - **Critical parameters**
   - `retryWrites=true` - Enables automatic retry of writes
@@ -98,6 +114,17 @@ mongodb+srv://myusername:MyP@ssw0rd123@ac-ypjmann-shard-00-00.kpcar11.mongodb.ne
   - `tls=true` - **THIS IS THE FIX FOR YOUR ERROR**
 
 ## 🚨 Common Mistakes
+
+### ❌ WRONG (Multiple hosts with mongodb+srv://)
+```
+mongodb+srv://user:pass@host1.mongodb.net,host2.mongodb.net,host3.mongodb.net/student_profiling?tls=true
+```
+**Error:** "Multiple service names are prohibited in an SRV URI"
+
+### ✅ CORRECT (Single host with mongodb+srv://)
+```
+mongodb+srv://user:pass@cluster-name.mongodb.net/student_profiling?retryWrites=true&w=majority&tls=true
+```
 
 ### ❌ WRONG (Missing TLS parameter)
 ```
@@ -150,6 +177,11 @@ mongodb+srv://user:pass@cluster.mongodb.net/student_profiling?retryWrites=true&w
    - Go to MongoDB Atlas → Database Access
    - Edit your user
    - Make sure they have **Read and write to any database** permission
+
+6. **Fix "Multiple service names are prohibited" Error**
+   - If you see this error, you're listing multiple hosts with `mongodb+srv://`
+   - Use ONLY the base cluster hostname, NOT the individual shards
+   - Get the correct URI from MongoDB Atlas → Connect → Connect your application
 
 ## 📞 Still Having Issues?
 

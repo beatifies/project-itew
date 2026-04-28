@@ -2,8 +2,8 @@ import { Edit, Eye, Award, Users, Star } from 'lucide-react';
 
 function StudentCard({ student, onView, onEdit }) {
   const getInitials = () => {
-    const firstName = student.personal_info?.first_name || '';
-    const lastName = student.personal_info?.last_name || '';
+    const firstName = student.first_name || '';
+    const lastName = student.last_name || '';
     return `${firstName[0] || ''}${lastName[0] || ''}`.toUpperCase();
   };
 
@@ -21,12 +21,12 @@ function StudentCard({ student, onView, onEdit }) {
   };
 
   const getTopSkills = () => {
-    const skills = student.skills || [];
+    const skills = student.special_skills || [];
     return skills.slice(0, 3);
   };
 
   const getTopAffiliations = () => {
-    const affiliations = student.affiliations || [];
+    const affiliations = student.club_memberships || [];
     return affiliations.slice(0, 2);
   };
 
@@ -40,7 +40,7 @@ function StudentCard({ student, onView, onEdit }) {
           </div>
           <div className="flex-1">
             <h3 className="font-bold text-lg">
-              {student.personal_info?.first_name} {student.personal_info?.last_name}
+              {student.first_name} {student.last_name}
             </h3>
             <p className="text-sm opacity-90">{student.student_id}</p>
           </div>
@@ -52,20 +52,20 @@ function StudentCard({ student, onView, onEdit }) {
         <div className="space-y-2">
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Program:</span>
-            <span className="text-sm font-semibold text-gray-900">{student.academic?.program}</span>
+            <span className="text-sm font-semibold text-gray-900">{student.program}</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Year:</span>
-            <span className="text-sm font-semibold text-gray-900">Year {student.academic?.year_level} - Section {student.academic?.section}</span>
+            <span className="text-sm font-semibold text-gray-900">Year {student.year_level} - Section {student.section}</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">GPA:</span>
-            <span className="text-lg font-bold text-orange-600">{student.academic?.gpa || 'N/A'}</span>
+            <span className="text-lg font-bold text-orange-600">{student.gpa || 'N/A'}</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Status:</span>
-            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(student.academic?.academic_status)}`}>
-              {student.academic?.academic_status}
+            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(student.academic_status)}`}>
+              {student.academic_status}
             </span>
           </div>
         </div>
@@ -84,7 +84,7 @@ function StudentCard({ student, onView, onEdit }) {
                 key={idx}
                 className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-full border border-orange-200"
               >
-                {skill.name}
+                {skill}
               </span>
             ))}
           </div>
@@ -101,8 +101,7 @@ function StudentCard({ student, onView, onEdit }) {
           <div className="space-y-1">
             {getTopAffiliations().map((aff, idx) => (
               <div key={idx} className="text-xs text-gray-600">
-                <span className="font-medium">{aff.name}</span>
-                <span className="text-gray-400"> • {aff.role}</span>
+                <span className="font-medium">{aff}</span>
               </div>
             ))}
           </div>
@@ -110,14 +109,14 @@ function StudentCard({ student, onView, onEdit }) {
       )}
 
       {/* Honors */}
-      {student.academic?.honors?.length > 0 && (
+      {student.honors?.length > 0 && (
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center gap-2 mb-2">
             <Award size={16} className="text-yellow-500" />
             <span className="text-sm font-semibold text-gray-700">Honors</span>
           </div>
           <div className="flex flex-wrap gap-1">
-            {student.academic.honors.map((honor, idx) => (
+            {student.honors.map((honor, idx) => (
               <span
                 key={idx}
                 className="px-2 py-1 bg-yellow-50 text-yellow-700 text-xs rounded-full border border-yellow-200"

@@ -39,6 +39,8 @@ class AuthenticatedSessionController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'role' => $user->role,
+                'student_id' => $user->student_id ?? null,
+                'faculty_id' => $user->faculty_id ?? null,
             ]
         ]);
     }
