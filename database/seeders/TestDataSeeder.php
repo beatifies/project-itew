@@ -108,7 +108,10 @@ class TestDataSeeder extends Seeder
         ];
 
         foreach ($facultyData as $data) {
-            Faculty::create($data);
+            Faculty::firstOrCreate(
+                ['faculty_id' => $data['faculty_id']],
+                $data
+            );
         }
 
         $this->command->info('Created 6 faculty members');
@@ -157,7 +160,10 @@ class TestDataSeeder extends Seeder
         ];
 
         foreach ($courses as $course) {
-            Course::create($course);
+            Course::firstOrCreate(
+                ['course_id' => $course['course_id']],
+                $course
+            );
         }
 
         $this->command->info('Created ' . count($courses) . ' courses');
@@ -170,6 +176,11 @@ class TestDataSeeder extends Seeder
         $courses = Course::all();
         
         foreach ($courses as $course) {
+            // Skip if instruction already exists
+            if (Instruction::where('course_id', $course->course_id)->exists()) {
+                continue;
+            }
+            
             Instruction::create([
                 'course_id' => $course->course_id,
                 'syllabus' => [
@@ -245,6 +256,12 @@ class TestDataSeeder extends Seeder
                 $day1 = $days[array_rand($days)];
                 $day2 = $days[array_rand(array_filter($days, fn($d) => $d !== $day1))];
                 $randomFaculty = $faculty[array_rand($faculty)];
+                
+                // Skip if schedule already exists for this course and section
+                if (Schedule::where('course_id', $course->course_id)
+                    ->where('section', $sections[$i] ?? 'A')->exists()) {
+                    continue;
+                }
                 
                 Schedule::create([
                     'course_id' => $course->course_id,
@@ -404,6 +421,10 @@ class TestDataSeeder extends Seeder
         ];
 
         foreach ($events as $event) {
+            // Skip if event already exists
+            if (Event::where('event_id', $event['event_id'])->exists()) {
+                continue;
+            }
             Event::create($event);
         }
 

@@ -13,9 +13,15 @@ class StudentSeeder extends Seeder
     public function run(): void
     {
         $students = $this->generateStudents(1000);
+        $created = 0;
         
         foreach ($students as $student) {
-            Student::create($student);
+            // Only create if student_id doesn't exist
+            Student::firstOrCreate(
+                ['student_id' => $student['student_id']],
+                $student
+            );
+            $created++;
         }
         
         $this->command->info('1000 students seeded successfully!');
