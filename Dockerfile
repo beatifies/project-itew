@@ -17,6 +17,9 @@ RUN apt-get update && apt-get install -y \
 RUN pecl install mongodb \
     && docker-php-ext-enable mongodb
 
+# Verify MongoDB extension is loaded
+RUN php -m | grep -i mongodb
+
 # Install PHP extensions
 RUN docker-php-ext-install pdo pdo_sqlite mbstring zip xml curl
 
@@ -32,9 +35,13 @@ COPY . .
 # Create .env file if it doesn't exist
 RUN if [ ! -f .env ]; then cp .env.example .env; fi
 
+# Debug: Show PHP version and loaded extensions
+RUN php -v && echo "---" && php -m
+
 # Install Laravel dependencies with increased memory limit
 # Skip scripts to avoid running migrations/artisan commands during build
-RUN COMPOSER_MEMORY_LIMIT=-1 composer install --no-dev --optimize-autoloader --no-interaction --no-progress --no-scripts
+# Show verbose output to debug issues
+RUN COMPOSER_MEMORY_LIMIT=-1 composer install --no-dev --optimize-autoloader --no-interaction --no-progress --no-scripts --ignore-platform-req=ext-mongodb 2>&1 || (echo "=== COMPOSER INSTALL FAILED ===" && composer diagnose 2>&1 && exit 1)
 
 # Set permissions
 RUN chmod -R 775 storage bootstrap/cache
