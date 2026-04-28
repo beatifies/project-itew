@@ -422,7 +422,8 @@ class TestDataSeeder extends Seeder
 
         foreach ($events as $event) {
             // Skip if event already exists
-            if (Event::where('event_id', $event['event_id'])->exists()) {
+            if (Event::where('event_name', $event['event_name'])
+                ->where('date', $event['date'])->exists()) {
                 continue;
             }
             Event::create($event);
