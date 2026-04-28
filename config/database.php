@@ -115,9 +115,6 @@ return [
             'database' => env('DB_DATABASE', 'student_profiling'),
             'options' => [
                 'tls' => true,
-                'tlsAllowInvalidCertificates' => false,
-                'tlsAllowInvalidHostnames' => false,
-                'tlsCAFile' => env('MONGODB_TLS_CA_FILE'),
             ],
         ],
 
