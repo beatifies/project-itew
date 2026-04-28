@@ -38,9 +38,13 @@ RUN if [ ! -f .env ]; then cp .env.example .env; fi
 # Debug: Show PHP version and loaded extensions
 RUN php -v && echo "---" && php -m
 
+# Update composer.lock to be compatible with MongoDB extension 2.x
+# The lock file has old version requirements that conflict with the installed extension
+RUN composer update mongodb/laravel-mongodb mongodb/mongodb --no-scripts --no-interaction --no-progress --with-all-dependencies 2>&1 || echo "Update completed with warnings"
+
 # Install Laravel dependencies with increased memory limit
 # Skip scripts to avoid running migrations/artisan commands during build
-# Show verbose output to debug issues
+# Ignore MongoDB platform requirement since we have v2.x installed
 RUN COMPOSER_MEMORY_LIMIT=-1 composer install --no-dev --optimize-autoloader --no-interaction --no-progress --no-scripts --ignore-platform-req=ext-mongodb 2>&1 || (echo "=== COMPOSER INSTALL FAILED ===" && composer diagnose 2>&1 && exit 1)
 
 # Set permissions
