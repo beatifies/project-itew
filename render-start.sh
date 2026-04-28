@@ -4,6 +4,11 @@ set -e
 # Render sets $PORT for you. We'll default for local Docker runs.
 PORT="${PORT:-8080}"
 
+# Clear and cache configurations at runtime (not build time)
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+
 # Run migrations/seeds only when explicitly enabled.
 # This prevents Docker image builds/deploys from failing due to missing dev deps (e.g., Faker).
 if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then

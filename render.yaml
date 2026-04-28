@@ -15,6 +15,11 @@ services:
         value: false
       - key: APP_KEY
         sync: false
+      - key: APP_URL
+        fromService:
+          name: ccs-profiling-backend
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
       - key: DB_CONNECTION
         value: mongodb
       - key: MONGODB_URI
@@ -23,4 +28,10 @@ services:
         value: "true"
       - key: RUN_SEED
         value: "false"
+      - key: CACHE_DRIVER
+        value: file
+      - key: SESSION_DRIVER
+        value: cookie
+      - key: LOG_CHANNEL
+        value: stderr
     healthCheckPath: /api/user

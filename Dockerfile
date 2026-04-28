@@ -6,14 +6,19 @@ RUN apt-get update && apt-get install -y \
     curl \
     zip \
     unzip \
-    libsqlite3-dev
+    libsqlite3-dev \
+    libzip-dev \
+    libonig-dev \
+    libxml2-dev \
+    libcurl4-openssl-dev \
+    libssl-dev
 
 # Install MongoDB extension
 RUN pecl install mongodb \
     && docker-php-ext-enable mongodb
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo pdo_sqlite
+RUN docker-php-ext-install pdo pdo_sqlite mbstring zip xml curl
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -24,14 +29,18 @@ WORKDIR /app
 # Copy project files
 COPY . .
 
-# Install Laravel dependencies
-RUN composer install --no-dev --optimize-autoloader
+# Create .env file if it doesn't exist
+RUN if [ ! -f .env ]; then cp .env.example .env; fi
+
+# Install Laravel dependencies with increased memory limit
+# Skip scripts to avoid running migrations/artisan commands during build
+RUN COMPOSER_MEMORY_LIMIT=-1 composer install --no-dev --optimize-autoloader --no-interaction --no-progress --no-scripts
 
 # Set permissions
 RUN chmod -R 775 storage bootstrap/cache
 
-# Create SQLite database
-RUN touch database/database.sqlite
+# Generate app key if not set (without running database operations)
+RUN if [ -z "$APP_KEY" ]; then php artisan key:generate --ansi --force; fi
 
 # Don't run migrations/seeders at image build time.
 # Render (and most hosts) build images without dev dependencies (e.g., Faker),
