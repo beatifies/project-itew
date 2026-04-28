@@ -47,9 +47,33 @@ class StudentController extends Controller
         $perPage = $request->input('per_page', 15);
         $students = $query->paginate($perPage);
 
+        // Transform data to flatten nested structure for frontend
+        $transformedData = $students->toArray();
+        $transformedData['data'] = array_map(function($student) {
+            return [
+                'id' => $student['_id'] ?? $student['id'],
+                'student_id' => $student['student_id'] ?? '',
+                'first_name' => $student['personal_info']['first_name'] ?? '',
+                'last_name' => $student['personal_info']['last_name'] ?? '',
+                'program' => $student['academic']['program'] ?? '',
+                'year_level' => $student['academic']['year_level'] ?? 1,
+                'section' => $student['academic']['section'] ?? '',
+                'gpa' => $student['academic']['gpa'] ?? null,
+                'academic_status' => $student['academic']['academic_status'] ?? 'active',
+                'enrollment_status' => $student['academic']['enrollment_status'] ?? 'enrolled',
+                'personal_info' => $student['personal_info'] ?? [],
+                'academic' => $student['academic'] ?? [],
+                'skills' => $student['skills'] ?? [],
+                'affiliations' => $student['affiliations'] ?? [],
+            ];
+        }, $students->items());
+
         return response()->json([
             'success' => true,
-            'data' => $students
+            'data' => $transformedData,
+            'last_page' => $students->lastPage(),
+            'current_page' => $students->currentPage(),
+            'total' => $students->total()
         ]);
     }
 
@@ -112,9 +136,31 @@ class StudentController extends Controller
         $perPage = $request->input('per_page', 20);
         $students = $query->paginate($perPage);
 
+        // Transform data
+        $transformedData = [];
+        foreach ($students->items() as $student) {
+            $transformedData[] = [
+                'id' => $student['_id'] ?? $student['id'],
+                'student_id' => $student['student_id'] ?? '',
+                'first_name' => $student['personal_info']['first_name'] ?? '',
+                'last_name' => $student['personal_info']['last_name'] ?? '',
+                'program' => $student['academic']['program'] ?? '',
+                'year_level' => $student['academic']['year_level'] ?? 1,
+                'section' => $student['academic']['section'] ?? '',
+                'gpa' => $student['academic']['gpa'] ?? null,
+                'academic_status' => $student['academic']['academic_status'] ?? 'active',
+                'enrollment_status' => $student['academic']['enrollment_status'] ?? 'enrolled',
+            ];
+        }
+
         return response()->json([
             'success' => true,
-            'data' => $students,
+            'data' => [
+                'data' => $transformedData,
+                'last_page' => $students->lastPage(),
+                'current_page' => $students->currentPage(),
+                'total' => $students->total()
+            ],
             'filters_applied' => $request->all()
         ]);
     }
@@ -159,14 +205,14 @@ class StudentController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'student_id' => 'required|string|unique:students,student_id',
-            'personal_info.first_name' => 'required|string|max:255',
-            'personal_info.last_name' => 'required|string|max:255',
-            'academic.program' => 'required|string',
-            'academic.year_level' => 'required|integer|between:1,5',
-            'academic.section' => 'required|string',
-            'academic.gpa' => 'nullable|numeric|between:0,5',
-            'academic.academic_status' => 'required|in:active,probation,graduated,dropped',
-            'academic.enrollment_status' => 'required|in:enrolled,irregular,graduated,dropped',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'program' => 'required|string',
+            'year_level' => 'required|integer|between:1,5',
+            'section' => 'required|string',
+            'gpa' => 'nullable|numeric|between:0,5',
+            'academic_status' => 'required|in:active,probation,graduated,dropped',
+            'enrollment_status' => 'required|in:enrolled,irregular,graduated,dropped',
         ]);
 
         if ($validator->fails()) {
@@ -176,12 +222,45 @@ class StudentController extends Controller
             ], 422);
         }
 
-        $student = Student::create($request->all());
+        // Convert flat data to nested structure
+        $studentData = [
+            'student_id' => $request->student_id,
+            'personal_info' => [
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+            ],
+            'academic' => [
+                'program' => $request->program,
+                'year_level' => (int)$request->year_level,
+                'section' => $request->section,
+                'gpa' => $request->gpa ? (float)$request->gpa : null,
+                'academic_status' => $request->academic_status,
+                'enrollment_status' => $request->enrollment_status,
+            ],
+            'skills' => [],
+            'affiliations' => [],
+            'activities' => [],
+            'violations' => [],
+        ];
 
+        $student = Student::create($studentData);
+
+        // Return flattened data
         return response()->json([
             'success' => true,
             'message' => 'Student created successfully',
-            'data' => $student
+            'data' => [
+                'id' => $student->_id,
+                'student_id' => $student->student_id,
+                'first_name' => $student->personal_info['first_name'],
+                'last_name' => $student->personal_info['last_name'],
+                'program' => $student->academic['program'],
+                'year_level' => $student->academic['year_level'],
+                'section' => $student->academic['section'],
+                'gpa' => $student->academic['gpa'],
+                'academic_status' => $student->academic['academic_status'],
+                'enrollment_status' => $student->academic['enrollment_status'],
+            ]
         ], 201);
     }
 
@@ -210,7 +289,11 @@ class StudentController extends Controller
      */
     public function update(Request $request, string $id): JsonResponse
     {
-        $student = Student::find($id);
+        $student = Student::where('student_id', $id)->first();
+
+        if (!$student) {
+            $student = Student::find($id);
+        }
 
         if (!$student) {
             return response()->json([
@@ -220,14 +303,14 @@ class StudentController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'personal_info.first_name' => 'sometimes|required|string|max:255',
-            'personal_info.last_name' => 'sometimes|required|string|max:255',
-            'academic.program' => 'sometimes|required|string',
-            'academic.year_level' => 'sometimes|required|integer|between:1,5',
-            'academic.section' => 'sometimes|required|string',
-            'academic.gpa' => 'nullable|numeric|between:0,5',
-            'academic.academic_status' => 'sometimes|required|in:active,probation,graduated,dropped',
-            'academic.enrollment_status' => 'sometimes|required|in:enrolled,irregular,graduated,dropped',
+            'first_name' => 'sometimes|required|string|max:255',
+            'last_name' => 'sometimes|required|string|max:255',
+            'program' => 'sometimes|required|string',
+            'year_level' => 'sometimes|required|integer|between:1,5',
+            'section' => 'sometimes|required|string',
+            'gpa' => 'nullable|numeric|between:0,5',
+            'academic_status' => 'sometimes|required|in:active,probation,graduated,dropped',
+            'enrollment_status' => 'sometimes|required|in:enrolled,irregular,graduated,dropped',
         ]);
 
         if ($validator->fails()) {
@@ -237,12 +320,51 @@ class StudentController extends Controller
             ], 422);
         }
 
-        $student->update($request->all());
+        // Update nested structure
+        $updateData = [];
+        if ($request->has('first_name')) {
+            $updateData['personal_info.first_name'] = $request->first_name;
+        }
+        if ($request->has('last_name')) {
+            $updateData['personal_info.last_name'] = $request->last_name;
+        }
+        if ($request->has('program')) {
+            $updateData['academic.program'] = $request->program;
+        }
+        if ($request->has('year_level')) {
+            $updateData['academic.year_level'] = (int)$request->year_level;
+        }
+        if ($request->has('section')) {
+            $updateData['academic.section'] = $request->section;
+        }
+        if ($request->has('gpa')) {
+            $updateData['academic.gpa'] = (float)$request->gpa;
+        }
+        if ($request->has('academic_status')) {
+            $updateData['academic.academic_status'] = $request->academic_status;
+        }
+        if ($request->has('enrollment_status')) {
+            $updateData['academic.enrollment_status'] = $request->enrollment_status;
+        }
 
+        $student->update($updateData);
+
+        // Return flattened data
         return response()->json([
             'success' => true,
             'message' => 'Student updated successfully',
-            'data' => $student
+            'data' => [
+                'id' => $student->_id,
+                'student_id' => $student->student_id,
+                'first_name' => $student->personal_info['first_name'],
+                'last_name' => $student->personal_info['last_name'],
+                'program' => $student->academic['program'],
+                'year_level' => $student->academic['year_level'],
+                'section' => $student->academic['section'],
+                'gpa' => $student->academic['gpa'],
+                'academic_status' => $student->academic['academic_status'],
+                'enrollment_status' => $student->academic['enrollment_status'],
+            ]
         ]);
     }
 
@@ -251,7 +373,11 @@ class StudentController extends Controller
      */
     public function destroy(string $id): JsonResponse
     {
-        $student = Student::find($id);
+        $student = Student::where('student_id', $id)->first();
+
+        if (!$student) {
+            $student = Student::find($id);
+        }
 
         if (!$student) {
             return response()->json([
