@@ -5,6 +5,7 @@ services:
     env: docker
     region: oregon
     plan: free
+    dockerfilePath: ./Dockerfile
     startCommand: /app/render-start.sh
     envVars:
       - key: APP_NAME
@@ -24,5 +25,3 @@ services:
       - key: RUN_SEED
         value: "false"
     healthCheckPath: /api/user
-    docker:
-      path: ./Dockerfile
