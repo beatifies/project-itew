@@ -11,14 +11,18 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     libcurl4-openssl-dev \
-    libssl-dev
+    libssl-dev \
+    ca-certificates
 
-# Install MongoDB extension
-RUN pecl install mongodb \
+# Update CA certificates (critical for TLS)
+RUN update-ca-certificates
+
+# Install MongoDB extension (specific version for better compatibility)
+RUN pecl install mongodb-1.17.0 \
     && docker-php-ext-enable mongodb
 
 # Verify MongoDB extension is loaded
-RUN php -m | grep -i mongodb
+RUN php -m | grep -i mongodb && php --ri mongodb | head -20
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo pdo_sqlite mbstring zip xml curl

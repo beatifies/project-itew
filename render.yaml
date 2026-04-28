@@ -28,6 +28,8 @@ services:
         value: "true"
       - key: RUN_SEED
         value: "false"
+      - key: MONGO_TLS_ALLOW_INVALID_CERTS
+        value: "true"
       - key: CACHE_DRIVER
         value: file
       - key: SESSION_DRIVER
