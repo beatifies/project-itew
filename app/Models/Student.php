@@ -2,52 +2,76 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MongoDB\Laravel\Eloquent\Model;
 
 class Student extends Model
 {
+    protected $connection = 'mongodb';
+    protected $collection = 'students';
     protected $primaryKey = 'student_id';
     public $incrementing = false;
     protected $keyType = 'string';
 
     protected $fillable = [
         'student_id',
-        'first_name',
-        'last_name',
-        'program',
-        'year_level',
-        'section',
-        'gpa',
-        'academic_status',
-        'honors',
-        'scholarships',
-        'special_skills',
-        'certifications',
-        'club_memberships',
-        'officer_role',
+        'personal_info',
+        'academic',
+        'skills',
+        'affiliations',
+        'activities',
+        'violations',
         'attendance_status',
         'discipline_status',
-        'enrollment_status',
     ];
 
     protected $casts = [
-        'honors' => 'array',
-        'scholarships' => 'array',
-        'special_skills' => 'array',
-        'certifications' => 'array',
-        'club_memberships' => 'array',
-        'year_level' => 'integer',
-        'gpa' => 'decimal:2',
+        'personal_info' => 'array',
+        'academic' => 'array',
+        'skills' => 'array',
+        'affiliations' => 'array',
+        'activities' => 'array',
+        'violations' => 'array',
     ];
 
-    public function eventParticipations(): HasMany
+    // Query Scopes
+    public function scopeWithSkill($query, $skillName)
     {
-        return $this->hasMany(EventParticipation::class, 'student_id', 'student_id');
+        return $query->where('skills', 'elemMatch', ['name' => $skillName]);
     }
 
-    public function user(): HasMany
+    public function scopeWithAffiliation($query, $type, $name)
     {
-        return $this->hasMany(User::class, 'user_id', 'student_id');
+        return $query->where('affiliations', 'elemMatch', [
+            'type' => $type,
+            'name' => $name
+        ]);
+    }
+
+    public function scopeWithCleanRecord($query)
+    {
+        return $query->where(function($q) {
+            $q->whereNull('violations')
+              ->orWhere('violations', []);
+        });
+    }
+
+    public function scopeWithGpaAbove($query, $gpa)
+    {
+        return $query->where('academic.gpa', '>=', $gpa);
+    }
+
+    public function scopeByYearLevel($query, $year)
+    {
+        return $query->where('academic.year_level', $year);
+    }
+
+    public function scopeByProgram($query, $program)
+    {
+        return $query->where('academic.program', $program);
+    }
+
+    public function scopeByAcademicStatus($query, $status)
+    {
+        return $query->where('academic.academic_status', $status);
     }
 }

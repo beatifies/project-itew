@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->enum('role', ['admin', 'faculty', 'student'])->default('student')->after('email');
-            $table->string('user_id')->unique()->after('id'); // For linking to student/faculty profile
+            $table->enum('role', ['admin', 'faculty', 'student'])->default('student');
+            $table->string('user_id')->unique(); // For linking to student/faculty profile
         });
     }
 

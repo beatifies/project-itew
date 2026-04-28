@@ -44,9 +44,7 @@ api.interceptors.response.use(
 export const authService = {
   login: async (email, password) => {
     const response = await api.post('/api/login', { email, password });
-    if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
-    }
+    // Session-based auth - no token needed
     return response.data;
   },
   
@@ -54,6 +52,7 @@ export const authService = {
     try {
       await api.post('/api/logout');
     } finally {
+      // Clear any local storage if exists
       localStorage.removeItem('token');
     }
   },
@@ -87,6 +86,21 @@ export const studentService = {
   
   delete: async (id) => {
     const response = await api.delete(`/api/students/${id}`);
+    return response.data;
+  },
+
+  filter: async (filters = {}) => {
+    const response = await api.get('/api/students/filter', { params: filters });
+    return response.data;
+  },
+
+  queryBySkill: async (skill) => {
+    const response = await api.get(`/api/students/query/skill/${skill}`);
+    return response.data;
+  },
+
+  queryByAffiliation: async (type, name) => {
+    const response = await api.get(`/api/students/query/affiliation/${type}/${name}`);
     return response.data;
   },
 };
@@ -240,6 +254,9 @@ export const apiService = {
   createStudent: studentService.create,
   updateStudent: studentService.update,
   deleteStudent: studentService.delete,
+  filterStudents: studentService.filter,
+  queryBySkill: studentService.queryBySkill,
+  queryByAffiliation: studentService.queryByAffiliation,
   
   getFaculty: facultyService.getAll,
   getFacultyMember: facultyService.get,

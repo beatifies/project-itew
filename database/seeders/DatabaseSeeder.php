@@ -30,5 +30,10 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('password'),
             'role' => 'user',
         ]);
+
+        // Seed 1000+ students
+        $this->call([
+            StudentSeeder::class,
+        ]);
     }
 }

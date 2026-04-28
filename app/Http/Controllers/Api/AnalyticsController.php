@@ -19,33 +19,44 @@ class AnalyticsController extends Controller
     {
         // Student Statistics
         $totalStudents = Student::count();
-        $studentsByProgram = Student::selectRaw('program, count(*) as count')
-            ->groupBy('program')
-            ->get();
-        $studentsByYearLevel = Student::selectRaw('year_level, count(*) as count')
-            ->groupBy('year_level')
-            ->orderBy('year_level')
-            ->get();
-        $studentsByStatus = Student::selectRaw('academic_status, count(*) as count')
-            ->groupBy('academic_status')
-            ->get();
-        $averageGPA = Student::avg('gpa');
+        $allStudents = Student::all();
+        
+        $studentsByProgram = $allStudents->groupBy('academic.program')->map(function($students, $program) {
+            return ['program' => $program, 'count' => $students->count()];
+        })->values();
+        
+        $studentsByYearLevel = $allStudents->groupBy('academic.year_level')->map(function($students, $yearLevel) {
+            return ['year_level' => $yearLevel, 'count' => $students->count()];
+        })->sortBy('year_level')->values();
+        
+        $studentsByStatus = $allStudents->groupBy('academic.academic_status')->map(function($students, $status) {
+            return ['academic_status' => $status, 'count' => $students->count()];
+        })->values();
+        
+        $averageGPA = $allStudents->avg('academic.gpa');
 
         // Faculty Statistics
         $totalFaculty = Faculty::count();
-        $facultyByStatus = Faculty::selectRaw('employment_status, count(*) as count')
-            ->groupBy('employment_status')
-            ->get();
-        $facultyByRole = Faculty::selectRaw('ccs_role, count(*) as count')
-            ->groupBy('ccs_role')
-            ->get();
-        $averageTeachingLoad = Faculty::avg('teaching_load');
+        $allFaculty = Faculty::all();
+        
+        $facultyByStatus = $allFaculty->groupBy('employment_status')->map(function($faculty, $status) {
+            return ['employment_status' => $status, 'count' => $faculty->count()];
+        })->values();
+        
+        $facultyByRole = $allFaculty->groupBy('ccs_role')->map(function($faculty, $role) {
+            return ['ccs_role' => $role, 'count' => $faculty->count()];
+        })->values();
+        
+        $averageTeachingLoad = $allFaculty->avg('teaching_load');
 
         // Event Statistics
         $totalEvents = Event::count();
-        $eventsByType = Event::selectRaw('event_type, count(*) as count')
-            ->groupBy('event_type')
-            ->get();
+        $allEvents = Event::all();
+        
+        $eventsByType = $allEvents->groupBy('event_type')->map(function($events, $type) {
+            return ['event_type' => $type, 'count' => $events->count()];
+        })->values();
+        
         $upcomingEvents = Event::where('date', '>=', now())
             ->orderBy('date')
             ->limit(5)
@@ -53,9 +64,11 @@ class AnalyticsController extends Controller
 
         // Schedule Statistics
         $totalSchedules = Schedule::count();
-        $schedulesBySemester = Schedule::selectRaw('semester, count(*) as count')
-            ->groupBy('semester')
-            ->get();
+        $allSchedules = Schedule::all();
+        
+        $schedulesBySemester = $allSchedules->groupBy('semester')->map(function($schedules, $semester) {
+            return ['semester' => $semester, 'count' => $schedules->count()];
+        })->values();
 
         return response()->json([
             'success' => true,

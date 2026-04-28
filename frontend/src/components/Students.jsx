@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
 import Sidebar from './layout/Sidebar';
 import Header from './layout/Header';
-import { Users, Plus, Edit, Trash2, Search, X, ChevronRight, ChevronDown, FolderOpen, UserCheck } from 'lucide-react';
+import StudentCard from './StudentCard';
+import StudentDetail from './StudentDetail';
+import QueryFilter from './QueryFilter';
+import { Users, Plus, Edit, Trash2, Search, X, ChevronRight, ChevronDown, FolderOpen, UserCheck, Grid, List } from 'lucide-react';
 
 function Students() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -17,6 +20,15 @@ function Students() {
   const [groupedStudents, setGroupedStudents] = useState({});
   const [expandedPrograms, setExpandedPrograms] = useState({});
   const [expandedSections, setExpandedSections] = useState({});
+
+  // New state for card view and filtering
+  const [viewMode, setViewMode] = useState('cards'); // 'cards', 'hierarchy', 'table'
+  const [showFilter, setShowFilter] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [showDetail, setShowDetail] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [activeFilters, setActiveFilters] = useState({});
 
   const [formData, setFormData] = useState({
     student_id: '',
@@ -39,12 +51,21 @@ function Students() {
     fetchStudents();
   }, []);
 
-  const fetchStudents = async () => {
+  const fetchStudents = async (page = 1, filters = {}) => {
     try {
       setLoading(true);
-      const response = await apiService.getStudents();
+      const params = { page, per_page: 20, ...filters };
+      const response = Object.keys(filters).length > 0
+        ? await apiService.filterStudents(params)
+        : await apiService.getStudents(params);
+      
       const studentsData = response.data?.data || response.data || [];
       setStudents(Array.isArray(studentsData) ? studentsData : []);
+      
+      if (response.data?.last_page) {
+        setTotalPages(response.data.last_page);
+      }
+      
       groupStudents(studentsData);
       setError(null);
     } catch (err) {
@@ -53,6 +74,28 @@ function Students() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleFilter = (filters) => {
+    setActiveFilters(filters);
+    setCurrentPage(1);
+    fetchStudents(1, filters);
+  };
+
+  const handleClearFilter = () => {
+    setActiveFilters({});
+    setCurrentPage(1);
+    fetchStudents(1);
+  };
+
+  const handleViewStudent = (student) => {
+    setSelectedStudent(student);
+    setShowDetail(true);
+  };
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    fetchStudents(newPage, activeFilters);
   };
 
   const groupStudents = (studentsList) => {
@@ -209,16 +252,53 @@ function Students() {
           {/* Page Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">Students by Program & Section</h1>
-              <p className="text-gray-600">Organized hierarchical view with alphabetical sorting</p>
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">Student Management</h1>
+              <p className="text-gray-600">Comprehensive student profiling system</p>
             </div>
-            <button
-              onClick={() => handleOpenModal()}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-600 to-orange-700 text-white rounded-lg hover:from-orange-700 hover:to-orange-800 transition-all shadow-lg"
-            >
-              <Plus size={20} />
-              <span>Add Student</span>
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowFilter(!showFilter)}
+                className="flex items-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all shadow-lg"
+              >
+                <Search size={20} />
+                <span>Filters</span>
+              </button>
+              <button
+                onClick={() => handleOpenModal()}
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-600 to-orange-700 text-white rounded-lg hover:from-orange-700 hover:to-orange-800 transition-all shadow-lg"
+              >
+                <Plus size={20} />
+                <span>Add Student</span>
+              </button>
+            </div>
+          </div>
+
+          {/* View Mode Toggle */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2 bg-white rounded-lg shadow-md p-1">
+              <button
+                onClick={() => setViewMode('cards')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+                  viewMode === 'cards' ? 'bg-orange-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <Grid size={18} />
+                Cards
+              </button>
+              <button
+                onClick={() => setViewMode('hierarchy')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+                  viewMode === 'hierarchy' ? 'bg-orange-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <List size={18} />
+                Hierarchy
+              </button>
+            </div>
+
+            <div className="text-sm text-gray-600">
+              Showing {students.length} students
+            </div>
           </div>
 
           {/* Stats Cards */}
@@ -263,8 +343,68 @@ function Students() {
             </div>
           )}
 
+          {/* Query Filter Panel */}
+          {showFilter && (
+            <QueryFilter onFilter={handleFilter} onClear={handleClearFilter} />
+          )}
+
+          {/* Card View */}
+          {viewMode === 'cards' && (
+            <div>
+              {loading ? (
+                <div className="text-center py-12">
+                  <div className="w-12 h-12 border-4 border-orange-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <p className="text-gray-600">Loading students...</p>
+                </div>
+              ) : students.length === 0 ? (
+                <div className="text-center py-12 bg-white rounded-lg shadow-md">
+                  <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500 text-lg mb-2">No students found</p>
+                  <p className="text-gray-400 text-sm">Click "Add Student" to create your first student</p>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {students.map((student) => (
+                      <StudentCard
+                        key={student.student_id}
+                        student={student}
+                        onView={handleViewStudent}
+                        onEdit={handleOpenModal}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-2 mt-8">
+                      <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Previous
+                      </button>
+                      <span className="px-4 py-2 text-gray-700">
+                        Page {currentPage} of {totalPages}
+                      </span>
+                      <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
           {/* Hierarchical View */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          {viewMode === 'hierarchy' && (
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
             {loading ? (
               <div className="text-center py-12">
                 <div className="w-12 h-12 border-4 border-orange-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -388,6 +528,18 @@ function Students() {
               </div>
             )}
           </div>
+          )}
+
+          {/* Student Detail Modal */}
+          {showDetail && selectedStudent && (
+            <StudentDetail
+              student={selectedStudent}
+              onClose={() => {
+                setShowDetail(false);
+                setSelectedStudent(null);
+              }}
+            />
+          )}
 
           {/* Modal */}
           {showModal && (

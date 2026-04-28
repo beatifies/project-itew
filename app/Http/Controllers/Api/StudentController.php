@@ -21,26 +21,26 @@ class StudentController extends Controller
         if ($request->has('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
+                $q->where('personal_info.first_name', 'like', "%{$search}%")
+                  ->orWhere('personal_info.last_name', 'like', "%{$search}%")
                   ->orWhere('student_id', 'like', "%{$search}%")
-                  ->orWhere('program', 'like', "%{$search}%");
+                  ->orWhere('academic.program', 'like', "%{$search}%");
             });
         }
 
         // Filter by program
         if ($request->has('program')) {
-            $query->where('program', $request->program);
+            $query->where('academic.program', $request->program);
         }
 
         // Filter by year level
         if ($request->has('year_level')) {
-            $query->where('year_level', $request->year_level);
+            $query->where('academic.year_level', (int)$request->year_level);
         }
 
         // Filter by academic status
         if ($request->has('academic_status')) {
-            $query->where('academic_status', $request->academic_status);
+            $query->where('academic.academic_status', $request->academic_status);
         }
 
         // Pagination
@@ -54,20 +54,119 @@ class StudentController extends Controller
     }
 
     /**
+     * Advanced filter endpoint
+     */
+    public function filter(Request $request): JsonResponse
+    {
+        $query = Student::query();
+
+        // Filter by skills
+        if ($request->has('skill')) {
+            $query->where('skills', 'elemMatch', ['name' => $request->skill]);
+        }
+
+        // Filter by affiliation type and name
+        if ($request->has('affiliation_type') && $request->has('affiliation_name')) {
+            $query->where('affiliations', 'elemMatch', [
+                'type' => $request->affiliation_type,
+                'name' => $request->affiliation_name
+            ]);
+        }
+
+        // Filter by GPA range
+        if ($request->has('gpa_min')) {
+            $query->where('academic.gpa', '>=', (float)$request->gpa_min);
+        }
+        if ($request->has('gpa_max')) {
+            $query->where('academic.gpa', '<=', (float)$request->gpa_max);
+        }
+
+        // Filter by academic status
+        if ($request->has('academic_status')) {
+            $query->where('academic.academic_status', $request->academic_status);
+        }
+
+        // Filter by year level
+        if ($request->has('year_level')) {
+            $query->where('academic.year_level', (int)$request->year_level);
+        }
+
+        // Filter by program
+        if ($request->has('program')) {
+            $query->where('academic.program', $request->program);
+        }
+
+        // Filter by discipline status
+        if ($request->has('discipline_status')) {
+            $query->where('discipline_status', $request->discipline_status);
+        }
+
+        // Filter students with clean record (no violations)
+        if ($request->has('clean_record') && $request->clean_record === 'true') {
+            $query->where(function($q) {
+                $q->whereNull('violations')
+                  ->orWhere('violations', []);
+            });
+        }
+
+        $perPage = $request->input('per_page', 20);
+        $students = $query->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $students,
+            'filters_applied' => $request->all()
+        ]);
+    }
+
+    /**
+     * Query students by skill
+     */
+    public function queryBySkill(string $skill): JsonResponse
+    {
+        $students = Student::withSkill($skill)->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $students,
+            'skill' => $skill,
+            'count' => $students->count()
+        ]);
+    }
+
+    /**
+     * Query students by affiliation
+     */
+    public function queryByAffiliation(string $type, string $name): JsonResponse
+    {
+        $students = Student::withAffiliation($type, $name)->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $students,
+            'affiliation' => [
+                'type' => $type,
+                'name' => $name
+            ],
+            'count' => $students->count()
+        ]);
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'student_id' => 'required|string|unique:students,student_id',
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'program' => 'required|string',
-            'year_level' => 'required|integer|between:1,5',
-            'section' => 'required|string',
-            'gpa' => 'nullable|numeric|between:0,5',
-            'academic_status' => 'required|in:active,probation,graduated,dropped',
-            'enrollment_status' => 'required|in:enrolled,irregular,graduated,dropped',
+            'personal_info.first_name' => 'required|string|max:255',
+            'personal_info.last_name' => 'required|string|max:255',
+            'academic.program' => 'required|string',
+            'academic.year_level' => 'required|integer|between:1,5',
+            'academic.section' => 'required|string',
+            'academic.gpa' => 'nullable|numeric|between:0,5',
+            'academic.academic_status' => 'required|in:active,probation,graduated,dropped',
+            'academic.enrollment_status' => 'required|in:enrolled,irregular,graduated,dropped',
         ]);
 
         if ($validator->fails()) {
@@ -121,14 +220,14 @@ class StudentController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'first_name' => 'sometimes|required|string|max:255',
-            'last_name' => 'sometimes|required|string|max:255',
-            'program' => 'sometimes|required|string',
-            'year_level' => 'sometimes|required|integer|between:1,5',
-            'section' => 'sometimes|required|string',
-            'gpa' => 'nullable|numeric|between:0,5',
-            'academic_status' => 'sometimes|required|in:active,probation,graduated,dropped',
-            'enrollment_status' => 'sometimes|required|in:enrolled,irregular,graduated,dropped',
+            'personal_info.first_name' => 'sometimes|required|string|max:255',
+            'personal_info.last_name' => 'sometimes|required|string|max:255',
+            'academic.program' => 'sometimes|required|string',
+            'academic.year_level' => 'sometimes|required|integer|between:1,5',
+            'academic.section' => 'sometimes|required|string',
+            'academic.gpa' => 'nullable|numeric|between:0,5',
+            'academic.academic_status' => 'sometimes|required|in:active,probation,graduated,dropped',
+            'academic.enrollment_status' => 'sometimes|required|in:enrolled,irregular,graduated,dropped',
         ]);
 
         if ($validator->fails()) {

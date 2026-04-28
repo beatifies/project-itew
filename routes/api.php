@@ -13,33 +13,38 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 
 // Public Auth Routes
 Route::post('/login', [AuthenticatedSessionController::class, 'store']);
-Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->middleware(['auth:sanctum']);
+Route::post('/logout', [AuthenticatedSessionController::class, 'destroy']);
 
 // User Info
 Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware(['auth:sanctum']);
+    return response()->json([
+        'id' => 1,
+        'name' => 'Admin User',
+        'email' => 'admin@ccs.edu',
+        'role' => 'admin',
+    ]);
+});
 
-// Analytics/Dashboard - PUBLIC for demo purposes
+// All routes are public for demo purposes
 Route::get('/analytics', [AnalyticsController::class, 'index']);
 
-// Protected API Routes (require authentication)
-Route::middleware(['auth:sanctum'])->group(function () {
-    // Student Routes
-    Route::apiResource('students', StudentController::class);
-    
-    // Faculty Routes
-    Route::apiResource('faculty', FacultyController::class);
-    
-    // Course Routes
-    Route::apiResource('courses', CourseController::class);
-    
-    // Instruction Routes
-    Route::apiResource('instructions', InstructionController::class);
-    
-    // Schedule Routes
-    Route::apiResource('schedules', ScheduleController::class);
-    
-    // Event Routes
-    Route::apiResource('events', EventController::class);
-});
+// Student Routes
+Route::apiResource('students', StudentController::class);
+Route::get('/students/filter', [StudentController::class, 'filter']);
+Route::get('/students/query/skill/{skill}', [StudentController::class, 'queryBySkill']);
+Route::get('/students/query/affiliation/{type}/{name}', [StudentController::class, 'queryByAffiliation']);
+
+// Faculty Routes
+Route::apiResource('faculty', FacultyController::class);
+
+// Course Routes
+Route::apiResource('courses', CourseController::class);
+
+// Instruction Routes
+Route::apiResource('instructions', InstructionController::class);
+
+// Schedule Routes
+Route::apiResource('schedules', ScheduleController::class);
+
+// Event Routes
+Route::apiResource('events', EventController::class);
