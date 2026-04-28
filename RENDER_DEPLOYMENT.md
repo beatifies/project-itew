@@ -17,10 +17,11 @@
 2. Create a free cluster
 3. Create a database user with username and password
 4. Whitelist all IP addresses (0.0.0.0/0) for free tier
-5. Get your connection string:
+5. Get your connection string (IMPORTANT - must include TLS parameters):
    ```
-   mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/student_profiling
+   mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/student_profiling?retryWrites=true&w=majority&tls=true
    ```
+6. **IMPORTANT:** Make sure your cluster supports TLS 1.2 or higher (all Atlas clusters do by default)
 
 ### Step 2: Push Code to GitHub
 
@@ -61,7 +62,7 @@ In Render dashboard, add these environment variables:
 | `APP_DEBUG` | `false` | **Never true in production** |
 | `APP_URL` | Auto-set by Render | From Render service URL |
 | `DB_CONNECTION` | `mongodb` | |
-| `MONGODB_URI` | `mongodb+srv://user:pass@cluster.mongodb.net/student_profiling` | **Your MongoDB Atlas URI** |
+| `MONGODB_URI` | `mongodb+srv://user:pass@cluster.mongodb.net/student_profiling?retryWrites=true&w=majority&tls=true` | **Your MongoDB Atlas URI with TLS** |
 | `DB_DATABASE` | `student_profiling` | |
 | `RUN_MIGRATIONS` | `true` | Run on deployment |
 | `RUN_SEED` | `false` | Set to true only if needed |
@@ -160,13 +161,19 @@ In Render dashboard:
 - Memory limit increase
 - All required PHP extensions
 
-### Issue: "MongoDB connection failed"
+### Issue: "MongoDB connection failed" or "TLS handshake failed"
 
 **Solutions:**
 1. Verify `MONGODB_URI` is correct in Render env vars
-2. Check MongoDB Atlas IP whitelist includes `0.0.0.0/0`
-3. Verify database user has read/write permissions
-4. Test connection string locally first
+2. **CRITICAL:** Ensure your MONGODB_URI includes `?tls=true` parameter
+3. Check MongoDB Atlas IP whitelist includes `0.0.0.0/0`
+4. Verify database user has read/write permissions
+5. Test connection string locally first
+6. Make sure your MongoDB Atlas cluster supports TLS 1.2+ (all modern clusters do)
+7. The connection string should look like:
+   ```
+   mongodb+srv://username:password@cluster.mongodb.net/student_profiling?retryWrites=true&w=majority&tls=true
+   ```
 
 ### Issue: "Migrations failed"
 

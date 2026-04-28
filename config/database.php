@@ -113,6 +113,12 @@ return [
             'driver' => 'mongodb',
             'dsn' => env('MONGODB_URI', 'mongodb://localhost:27017'),
             'database' => env('DB_DATABASE', 'student_profiling'),
+            'options' => [
+                'tls' => true,
+                'tlsAllowInvalidCertificates' => false,
+                'tlsAllowInvalidHostnames' => false,
+                'tlsCAFile' => env('MONGODB_TLS_CA_FILE'),
+            ],
         ],
 
     ],
