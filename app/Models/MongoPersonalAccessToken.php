@@ -13,6 +13,7 @@ class MongoPersonalAccessToken extends Model implements HasAbilities
         'name',
         'token',
         'abilities',
+        'last_used_at',
         'expires_at',
         'tokenable_id',
         'tokenable_type',
@@ -24,6 +25,7 @@ class MongoPersonalAccessToken extends Model implements HasAbilities
 
     protected $casts = [
         'abilities' => 'array',
+        'last_used_at' => 'datetime',
         'expires_at' => 'datetime',
     ];
 

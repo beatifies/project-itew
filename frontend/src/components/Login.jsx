@@ -139,7 +139,7 @@ function Login() {
           <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-xs text-blue-800 font-semibold mb-2">Demo Credentials:</p>
             <p className="text-xs text-blue-700">Email: <code className="bg-blue-100 px-2 py-0.5 rounded">admin@ccs.edu</code></p>
-            <p className="text-xs text-blue-700">Password: <code className="bg-blue-100 px-2 py-0.5 rounded">password</code></p>
+            <p className="text-xs text-blue-700">Password: <code className="bg-blue-100 px-2 py-0.5 rounded">password!</code></p>
           </div>
         </div>
 

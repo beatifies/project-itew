@@ -37,23 +37,13 @@ WORKDIR /app
 # Copy project files
 COPY . .
 
-# Create .env file if it doesn't exist
-RUN if [ ! -f .env ]; then cp .env.example .env; fi
-
-# Debug: Show PHP version and loaded extensions
-RUN php -v && echo "---" && php -m
-
-# Update composer.lock to be compatible with MongoDB extension 2.x
-# The lock file has old version requirements that conflict with the installed extension
-RUN composer update mongodb/laravel-mongodb mongodb/mongodb --no-scripts --no-interaction --no-progress --with-all-dependencies 2>&1 || echo "Update completed with warnings"
-
-# Install Laravel dependencies with increased memory limit
-# Skip scripts to avoid running migrations/artisan commands during build
-# Ignore MongoDB platform requirement since we have v2.x installed
-RUN COMPOSER_MEMORY_LIMIT=-1 composer install --no-dev --optimize-autoloader --no-interaction --no-progress --no-scripts --ignore-platform-req=ext-mongodb 2>&1 || (echo "=== COMPOSER INSTALL FAILED ===" && composer diagnose 2>&1 && exit 1)
-
 # Set permissions
 RUN chmod -R 775 storage bootstrap/cache
+
+# Install Laravel dependencies with increased memory limit
+# We skip scripts to avoid running migrations during build.
+# We ignore platform requirements for ext-mongodb because it's installed via pecl.
+RUN COMPOSER_MEMORY_LIMIT=-1 composer install --no-dev --optimize-autoloader --no-interaction --no-progress --no-scripts --ignore-platform-req=ext-mongodb
 
 # Generate app key if not set (without running database operations)
 RUN if [ -z "$APP_KEY" ]; then php artisan key:generate --ansi --force; fi
