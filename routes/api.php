@@ -28,6 +28,7 @@ Route::get('/health', function () {
 // Database Connection Diagnostic Endpoint (Public — remove after debugging)
 Route::get('/db-test', function () {
     $result = [
+        'version' => '2.0',
         'timestamp' => now()->toIso8601String(),
         'php_mongodb_ext' => extension_loaded('mongodb') ? phpversion('mongodb') : 'NOT LOADED',
         'mongodb_uri_set' => !empty(env('MONGODB_URI')),
