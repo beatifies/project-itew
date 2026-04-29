@@ -1,33 +1,21 @@
 FROM php:8.3-cli
-# Force fresh build v2.2
+# Force fresh build v2.3 - Optimized extension installer
 
-# Install dependencies
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     git \
     curl \
     zip \
     unzip \
-    libsqlite3-dev \
-    libzip-dev \
-    libonig-dev \
-    libxml2-dev \
-    libcurl4-openssl-dev \
-    libssl-dev \
-    libicu-dev \
-    ca-certificates
+    ca-certificates \
+    && update-ca-certificates
 
-# Update CA certificates (critical for TLS)
-RUN update-ca-certificates
-
-# Install MongoDB extension (latest version for better compatibility with v5.0 driver)
-RUN pecl install mongodb \
-    && docker-php-ext-enable mongodb
+# Install PHP extensions using the high-performance installer script
+COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
+RUN install-php-extensions mongodb bcmath intl zip
 
 # Verify MongoDB extension is loaded
-RUN php -m | grep -i mongodb && php --ri mongodb | head -20
-
-# Install PHP extensions
-RUN docker-php-ext-install pdo pdo_sqlite mbstring zip xml curl bcmath intl
+RUN php -m | grep -i mongodb && php --ri mongodb | head -10
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
