@@ -19,7 +19,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 
 // --- PUBLIC ROUTES ---
 Route::post('/login', [AuthenticatedSessionController::class, 'store']);
-Route::post('/health', fn() => response()->json(['status' => 'ok', 'version' => '1.0.3']));
+Route::get('/health', fn() => response()->json(['status' => 'ok', 'version' => '1.0.3']));
 Route::get('/db-test', function () {
     try {
         \DB::connection('mongodb')->getMongoDB()->command(['ping' => 1]);
