@@ -19,7 +19,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [env('FRONTEND_URL', 'http://localhost:5173'), 'http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:5176', 'http://localhost:5177', 'https://project-itew.vercel.app', 'https://project-itew-three.vercel.app', '*.vercel.app'],
+    'allowed_origins' => [env('FRONTEND_URL', 'http://localhost:5173'), 'http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:5176', 'http://localhost:5177', 'https://project-itew.vercel.app', 'https://project-itew-three.vercel.app', 'https://project-itew1.vercel.app', '*.vercel.app'],
 
     'allowed_origins_patterns' => [],
 

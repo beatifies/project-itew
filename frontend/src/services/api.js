@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const DEFAULT_API_URL = 'https://ccs-profiling-backend-qg5q.onrender.com';
+const DEFAULT_API_URL = 'https://ccs-profiling-backend-89bt.onrender.com';
 
 export const API_URL = (import.meta.env.VITE_API_URL || DEFAULT_API_URL).replace(/\/$/, '');
 
