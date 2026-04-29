@@ -26,7 +26,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Configure Sanctum to use MongoDB for API tokens
         \Laravel\Sanctum\Sanctum::usePersonalAccessTokenModel(
-            \MongoDB\Laravel\Auth\PersonalAccessToken::class
+            \App\Models\MongoPersonalAccessToken::class
         );
     }
 }
