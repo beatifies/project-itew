@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * DEPLOYMENT STABILITY VERIFICATION: 1.0.1
+ * IF YOU SEE THIS, THE CODE IS UPDATING CORRECTLY locally.
+ */
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\StudentController;
@@ -18,7 +23,10 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->midd
 
 // Health Check Endpoint (Public)
 Route::get('/health', function () {
-    return response()->json(['status' => 'ok']);
+    return response()->json([
+        'status' => 'ok',
+        'version' => '1.0.1'
+    ]);
 });
 
 // Database Connection Diagnostic Endpoint (Public)
@@ -60,6 +68,11 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::get('/analytics', [AnalyticsController::class, 'index']);
 });
 
+// Faculty and Admin - Shared access to analytics and management
+Route::middleware(['auth:sanctum', 'role:admin,faculty'])->group(function () {
+    Route::get('/analytics', [AnalyticsController::class, 'index']);
+});
+
 // Faculty - Full access except delete on main entities
 Route::middleware(['auth:sanctum', 'role:faculty'])->group(function () {
     Route::apiResource('students', StudentController::class)->except(['destroy']);
@@ -73,7 +86,6 @@ Route::middleware(['auth:sanctum', 'role:faculty'])->group(function () {
     Route::apiResource('schedules', ScheduleController::class);
     Route::apiResource('events', EventController::class)->except(['destroy']);
     Route::apiResource('event-participations', EventParticipationController::class);
-    Route::get('/analytics', [AnalyticsController::class, 'index']);
 });
 
 // Student - Own profile and view-only access
