@@ -3,8 +3,9 @@
 namespace App\Models;
 
 use MongoDB\Laravel\Eloquent\Model;
+use Laravel\Sanctum\Contracts\HasAbilities;
 
-class MongoPersonalAccessToken extends Model
+class MongoPersonalAccessToken extends Model implements HasAbilities
 {
     protected $connection = 'mongodb';
     protected $collection = 'personal_access_tokens';
@@ -30,5 +31,16 @@ class MongoPersonalAccessToken extends Model
     public function tokenable()
     {
         return $this->morphTo();
+    }
+
+    public function can($ability)
+    {
+        return in_array('*', $this->abilities) ||
+               array_key_exists($ability, array_flip($this->abilities));
+    }
+
+    public function cant($ability)
+    {
+        return ! $this->can($ability);
     }
 }
