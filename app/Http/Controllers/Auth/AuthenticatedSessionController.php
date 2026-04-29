@@ -39,13 +39,21 @@ class AuthenticatedSessionController extends Controller
             $rawPassword = $user->getRawOriginal('password') ?? $user->password;
             $passwordMatch = false;
 
-            // First try bcrypt verify (normal flow)
-            if (Hash::check($request->password, $rawPassword)) {
+            // First try plain-text match (for manually inserted DB records)
+            if ($request->password === $rawPassword) {
                 $passwordMatch = true;
-            }
-            // Fallback: plain-text match (for manually inserted DB records)
-            elseif ($request->password === $rawPassword) {
-                $passwordMatch = true;
+            } else {
+                // Then try bcrypt verify (normal flow) — wrapped in try-catch because
+                // Hash::check() throws RuntimeException if stored value isn't a valid hash
+                try {
+                    if (Hash::check($request->password, $rawPassword)) {
+                        $passwordMatch = true;
+                    }
+                } catch (\Throwable $hashError) {
+                    Log::debug('Hash::check failed (password may be plain text)', [
+                        'error' => $hashError->getMessage(),
+                    ]);
+                }
             }
 
             if (!$passwordMatch) {
