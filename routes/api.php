@@ -16,6 +16,15 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 Route::post('/login', [AuthenticatedSessionController::class, 'store']);
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->middleware('auth:sanctum');
 
+// Health Check Endpoint (Public)
+Route::get('/health', function () {
+    return response()->json([
+        'status' => 'ok',
+        'timestamp' => now()->toIso8601String(),
+        'service' => 'CCS Profiling Backend'
+    ]);
+});
+
 // User Info
 Route::get('/user', function (Request $request) {
     return $request->user();

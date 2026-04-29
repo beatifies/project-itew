@@ -27,7 +27,7 @@ services:
       - key: RUN_MIGRATIONS
         value: "true"
       - key: RUN_SEED
-        value: "true"
+        value: "false"
       - key: MONGO_TLS_ALLOW_INVALID_CERTS
         value: "true"
       - key: CACHE_DRIVER
@@ -36,4 +36,4 @@ services:
         value: cookie
       - key: LOG_CHANNEL
         value: stderr
-    healthCheckPath: /api/user
+    healthCheckPath: /api/health
