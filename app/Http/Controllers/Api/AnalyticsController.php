@@ -9,6 +9,7 @@ use App\Models\Event;
 use App\Models\Schedule;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Carbon\Carbon;
 
 class AnalyticsController extends Controller
 {
