@@ -8,6 +8,8 @@ use Laravel\Sanctum\Contracts\HasAbilities;
 class MongoPersonalAccessToken extends Model implements HasAbilities
 {
     protected $collection = 'personal_access_tokens';
+    protected $keyType = 'string';
+    public $incrementing = false;
 
     protected $fillable = [
         'name',

@@ -83,17 +83,18 @@ class AuthenticatedSessionController extends Controller
                 ]
             ]);
         } catch (\Throwable $e) {
-            Log::error('Login exception', [
-                'message' => $e->getMessage(),
-                'class' => get_class($e),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
+            Log::error('Login error: ' . $e->getMessage(), [
+                'exception' => $e,
+                'email' => $request->email
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Login failed: ' . $e->getMessage(),
-                'error' => get_class($e) . ': ' . $e->getMessage(),
+                'message' => 'An error occurred during login',
+                'error' => $e->getMessage(),
+                'type' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
             ], 500);
         }
     }
