@@ -1,8 +1,8 @@
 <?php
 
 /**
- * DEPLOYMENT STABILITY VERIFICATION: 1.0.1
- * IF YOU SEE THIS, THE CODE IS UPDATING CORRECTLY locally.
+ * DEPLOYMENT STABILITY VERIFICATION: 1.0.3
+ * BALANCED SECURITY - Simplified Role Management.
  */
 
 use Illuminate\Http\Request;
@@ -17,102 +17,63 @@ use App\Http\Controllers\Api\EventParticipationController;
 use App\Http\Controllers\Api\AnalyticsController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 
-// Public Auth Routes
+// --- PUBLIC ROUTES ---
 Route::post('/login', [AuthenticatedSessionController::class, 'store']);
-Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->middleware('auth:sanctum');
-
-// Emergency Admin Creator (Remove after use)
-Route::get('/create-admin', function () {
-    try {
-        $admin = \App\Models\User::updateOrCreate(
-            ['email' => 'admin@ccs.edu'],
-            [
-                'name' => 'Admin User',
-                'password' => 'password!', // Stored as plain-text for this specific migration
-                'role' => 'admin',
-                'user_id' => 'ADMIN001'
-            ]
-        );
-        return response()->json(['status' => 'success', 'message' => 'Admin created/updated', 'user' => $admin]);
-    } catch (\Throwable $e) {
-        return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
-    }
-});
-
-// Health Check Endpoint (Public)
-Route::get('/health', function () {
-    return response()->json([
-        'status' => 'ok',
-        'version' => '1.0.1'
-    ]);
-});
-
-// Database Connection Diagnostic Endpoint (Public)
+Route::post('/health', fn() => response()->json(['status' => 'ok', 'version' => '1.0.3']));
 Route::get('/db-test', function () {
     try {
-        $db = \DB::connection('mongodb')->getMongoDB();
-        $db->command(['ping' => 1]);
-        return response()->json([
-            'status' => 'connected',
-            'database' => \DB::connection('mongodb')->getDatabaseName(),
-            'ping' => 'ok'
-        ]);
+        \DB::connection('mongodb')->getMongoDB()->command(['ping' => 1]);
+        return response()->json(['status' => 'connected']);
     } catch (\Throwable $e) {
-        return response()->json([
-            'status' => 'error',
-            'message' => $e->getMessage()
-        ], 500);
+        return response()->json(['error' => $e->getMessage()], 500);
     }
 });
 
-// User Info
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+// Emergency Admin Creator
+Route::get('/create-admin', function () {
+    $admin = \App\Models\User::updateOrCreate(['email' => 'admin@ccs.edu'], [
+        'name' => 'Admin User', 'password' => 'password!', 'role' => 'admin', 'user_id' => 'ADMIN001'
+    ]);
+    return response()->json(['status' => 'success', 'user' => $admin]);
+});
 
-// Admin Only - Full CRUD on everything
-Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
-    Route::apiResource('students', StudentController::class);
-    Route::get('/students/filter', [StudentController::class, 'filter']);
-    Route::get('/students/query/skill/{skill}', [StudentController::class, 'queryBySkill']);
-    Route::get('/students/query/affiliation/{type}/{name}', [StudentController::class, 'queryByAffiliation']);
+// --- PROTECTED ROUTES (LOGGED IN ONLY) ---
+Route::middleware(['auth:sanctum'])->group(function () {
     
-    Route::apiResource('faculty', FacultyController::class);
-    Route::apiResource('courses', CourseController::class);
-    Route::apiResource('instructions', InstructionController::class);
-    Route::apiResource('schedules', ScheduleController::class);
-    Route::apiResource('events', EventController::class);
-    Route::apiResource('event-participations', EventParticipationController::class);
-    Route::get('/analytics', [AnalyticsController::class, 'index']);
-});
+    // 1. SHARED (Everyone)
+    Route::get('/user', fn(Request $request) => $request->user());
+    Route::post('/logout', [AuthenticatedSessionController::class, 'destroy']);
 
-// Faculty and Admin - Shared access to analytics and management
-Route::middleware(['auth:sanctum', 'role:admin,faculty'])->group(function () {
-    Route::get('/analytics', [AnalyticsController::class, 'index']);
-});
+    // 2. ADMIN & FACULTY (Management & Dashboard)
+    Route::middleware(['role:admin,faculty'])->group(function () {
+        Route::get('/analytics', [AnalyticsController::class, 'index']);
+        
+        // Full access for Faculty/Admin (except delete for faculty)
+        Route::apiResource('students', StudentController::class)->except(['destroy']);
+        Route::apiResource('faculty', FacultyController::class)->except(['destroy']);
+        Route::apiResource('courses', CourseController::class)->except(['destroy']);
+        Route::apiResource('instructions', InstructionController::class);
+        Route::apiResource('schedules', ScheduleController::class);
+        Route::apiResource('events', EventController::class)->except(['destroy']);
+        Route::apiResource('event-participations', EventParticipationController::class);
+        
+        // Search & Filters
+        Route::get('/students/filter', [StudentController::class, 'filter']);
+        Route::get('/students/query/skill/{skill}', [StudentController::class, 'queryBySkill']);
+    });
 
-// Faculty - Full access except delete on main entities
-Route::middleware(['auth:sanctum', 'role:faculty'])->group(function () {
-    Route::apiResource('students', StudentController::class)->except(['destroy']);
-    Route::get('/students/filter', [StudentController::class, 'filter']);
-    Route::get('/students/query/skill/{skill}', [StudentController::class, 'queryBySkill']);
-    Route::get('/students/query/affiliation/{type}/{name}', [StudentController::class, 'queryByAffiliation']);
-    
-    Route::apiResource('faculty', FacultyController::class)->except(['destroy']);
-    Route::apiResource('courses', CourseController::class)->except(['destroy']);
-    Route::apiResource('instructions', InstructionController::class);
-    Route::apiResource('schedules', ScheduleController::class);
-    Route::apiResource('events', EventController::class)->except(['destroy']);
-    Route::apiResource('event-participations', EventParticipationController::class);
-});
+    // 3. ADMIN ONLY (Destructive Actions)
+    Route::middleware(['role:admin'])->group(function () {
+        Route::delete('/students/{id}', [StudentController::class, 'destroy']);
+        Route::delete('/faculty/{id}', [FacultyController::class, 'destroy']);
+        Route::delete('/courses/{id}', [CourseController::class, 'destroy']);
+        Route::delete('/events/{id}', [EventController::class, 'destroy']);
+    });
 
-// Student - Own profile and view-only access
-Route::middleware(['auth:sanctum', 'role:student'])->group(function () {
-    Route::get('/students/{id}', [StudentController::class, 'show']);
-    Route::put('/students/{id}', [StudentController::class, 'update']);
-    Route::get('/courses', [CourseController::class, 'index']);
-    Route::get('/courses/{id}', [CourseController::class, 'show']);
-    Route::get('/events', [EventController::class, 'index']);
-    Route::get('/events/{id}', [EventController::class, 'show']);
-    Route::get('/event-participations', [EventParticipationController::class, 'index']);
+    // 4. STUDENT ONLY (View Personal Data)
+    Route::middleware(['role:student'])->group(function () {
+        Route::get('/my-profile', fn(Request $request) => $request->user());
+        Route::get('/view-courses', [CourseController::class, 'index']);
+        Route::get('/view-events', [EventController::class, 'index']);
+    });
 });
