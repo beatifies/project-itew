@@ -34,8 +34,6 @@ RUN chmod -R 775 storage bootstrap/cache
 # We ignore platform requirements for ext-mongodb because it's installed via pecl.
 RUN COMPOSER_MEMORY_LIMIT=-1 composer install --no-dev --optimize-autoloader --no-interaction --no-progress --no-scripts --ignore-platform-req=ext-mongodb
 
-# Generate app key if not set (without running database operations)
-RUN if [ -z "$APP_KEY" ]; then php artisan key:generate --ansi --force; fi
 
 # Don't run migrations/seeders at image build time.
 # Render (and most hosts) build images without dev dependencies (e.g., Faker),
