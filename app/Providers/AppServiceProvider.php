@@ -23,5 +23,10 @@ class AppServiceProvider extends ServiceProvider
         ResetPassword::createUrlUsing(function (object $notifiable, string $token) {
             return config('app.frontend_url')."/password-reset/$token?email={$notifiable->getEmailForPasswordReset()}";
         });
+
+        // Configure Sanctum to use MongoDB for API tokens
+        \Laravel\Sanctum\Sanctum::usePersonalAccessTokenModel(
+            \MongoDB\Laravel\Auth\PersonalAccessToken::class
+        );
     }
 }
