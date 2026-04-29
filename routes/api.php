@@ -36,36 +36,44 @@ Route::get('/db-test', function () {
         'db_connection' => config('database.default'),
         'db_database' => config('database.connections.mongodb.database'),
     ];
-
     try {
-        $connection = \Illuminate\Support\Facades\DB::connection('mongodb');
-        $mongo = $connection->getMongoClient();
-        $db = $mongo->selectDatabase(config('database.connections.mongodb.database'));
-
-        // Test actual connection by running a ping command
-        $pingResult = $db->command(['ping' => 1])->toArray();
-        $result['ping'] = 'ok';
-
-        // Count users
-        $userCount = \App\Models\User::count();
-        $result['user_count'] = $userCount;
-
-        // List user emails (for verification)
-        $users = \App\Models\User::all(['email', 'role', 'name'])->toArray();
-        $result['users'] = array_map(fn($u) => [
-            'email' => $u['email'] ?? 'N/A',
-            'role' => $u['role'] ?? 'N/A',
-            'name' => $u['name'] ?? 'N/A',
-        ], $users);
-
-        $result['status'] = 'connected';
+        $db = \DB::connection('mongodb')->getMongoDB();
+        $ping = $db->command(['ping' => 1]);
+        
+        $users = \App\Models\User::all();
+        $admin = \App\Models\User::where('role', 'admin')->first();
+        
+        $token_test = 'Not tested';
+        if ($admin) {
+            try {
+                $token = $admin->createToken('test_token')->plainTextToken;
+                $token_test = 'Success: ' . substr($token, 0, 10) . '...';
+            } catch (\Throwable $te) {
+                $token_test = 'Failed: ' . $te->getMessage();
+            }
+        }
+        
+        return response()->json([
+            'status' => 'connected',
+            'database' => \DB::connection('mongodb')->getDatabaseName(),
+            'ping' => 'ok',
+            'user_count' => $users->count(),
+            'token_system' => $token_test,
+            'users' => $users->map(fn($u) => [
+                'email' => $u->email,
+                'role' => $u->role,
+                'name' => $u->name
+            ]),
+            'php_mongodb_ext' => phpversion('mongodb'),
+        ]);
     } catch (\Throwable $e) {
-        $result['status'] = 'FAILED';
-        $result['error'] = get_class($e) . ': ' . $e->getMessage();
-        $result['error_file'] = $e->getFile() . ':' . $e->getLine();
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'type' => get_class($e),
+            'line' => $e->getLine()
+        ], 500);
     }
-
-    return response()->json($result);
 });
 
 // User Info
