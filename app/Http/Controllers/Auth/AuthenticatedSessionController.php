@@ -31,9 +31,13 @@ class AuthenticatedSessionController extends Controller
             ], 401);
         }
 
+        // Create a Sanctum token for API authentication
+        $token = $user->createToken('auth-token')->plainTextToken;
+
         return response()->json([
             'success' => true,
             'message' => 'Login successful',
+            'token' => $token,
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,

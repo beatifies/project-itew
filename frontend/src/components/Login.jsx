@@ -19,6 +19,10 @@ function Login() {
 
     try {
       const response = await authService.login(formData.email, formData.password);
+      // Store the authentication token
+      if (response.token) {
+        localStorage.setItem('token', response.token);
+      }
       // Store user role and IDs
       localStorage.setItem('userRole', response.user.role);
       localStorage.setItem('userId', response.user.id);
