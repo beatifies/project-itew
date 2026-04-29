@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * ANALYTICS STABILITY VERIFICATION: 1.0.4
+ * IF YOU SEE THIS, I AM PHYSICALLY CHANGING YOUR CODE.
+ */
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
