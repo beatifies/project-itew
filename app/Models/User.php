@@ -49,4 +49,29 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Overriding Sanctum's tokens relationship for MongoDB compatibility.
+     */
+    public function tokens()
+    {
+        return $this->morphMany(MongoPersonalAccessToken::class, 'tokenable');
+    }
+
+    /**
+     * Overriding createToken to bypass SQL/PDO type-hinting issues.
+     */
+    public function createToken(string $name, array $abilities = ['*'], \DateTimeInterface $expiresAt = null)
+    {
+        $plainTextToken = \Illuminate\Support\Str::random(40);
+
+        $token = $this->tokens()->create([
+            'name' => $name,
+            'token' => hash('sha256', $plainTextToken),
+            'abilities' => $abilities,
+            'expires_at' => $expiresAt,
+        ]);
+
+        return new \Laravel\Sanctum\NewAccessToken($token, $token->getKey().'|'.$plainTextToken);
+    }
 }

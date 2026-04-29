@@ -2,13 +2,10 @@
 
 namespace App\Models;
 
-use Laravel\Sanctum\PersonalAccessToken as BaseToken;
-use MongoDB\Laravel\Eloquent\HybridRelations;
+use MongoDB\Laravel\Eloquent\Model;
 
-class MongoPersonalAccessToken extends BaseToken
+class MongoPersonalAccessToken extends Model
 {
-    use HybridRelations;
-
     protected $connection = 'mongodb';
     protected $collection = 'personal_access_tokens';
     protected $keyType = 'string';
@@ -23,4 +20,15 @@ class MongoPersonalAccessToken extends BaseToken
         'tokenable_id',
         'tokenable_type',
     ];
+
+    protected $casts = [
+        'abilities' => 'array',
+        'last_used_at' => 'datetime',
+        'expires_at' => 'datetime',
+    ];
+
+    public function tokenable()
+    {
+        return $this->morphTo();
+    }
 }
