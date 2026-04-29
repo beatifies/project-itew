@@ -19,9 +19,25 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [env('FRONTEND_URL', 'http://localhost:5173'), 'http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:5176', 'http://localhost:5177', 'https://project-itew.vercel.app', 'https://project-itew-three.vercel.app', 'https://project-itew1.vercel.app', '*.vercel.app'],
+    'allowed_origins' => [
+        // Local development
+        'http://localhost:5173',
+        'http://localhost:5174',
+        'http://localhost:5175',
+        'http://localhost:5176',
+        'http://localhost:5177',
+        // Known Vercel production domains
+        'https://project-itew.vercel.app',
+        'https://project-itew-three.vercel.app',
+        'https://project-itew1.vercel.app',
+        // Dynamic frontend URL set via environment variable (e.g. on Render)
+        env('FRONTEND_URL', 'http://localhost:5173'),
+    ],
 
-    'allowed_origins_patterns' => [],
+    // Regex patterns — covers ALL *.vercel.app preview/deployment URLs
+    'allowed_origins_patterns' => [
+        '#^https://project-itew[a-z0-9\-]*\.vercel\.app$#',
+    ],
 
     'allowed_headers' => ['*'],
 
