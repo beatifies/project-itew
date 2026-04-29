@@ -17,87 +17,81 @@ class AnalyticsController extends Controller
      */
     public function index(): JsonResponse
     {
-        // Student Statistics
-        $totalStudents = Student::count();
-        $allStudents = Student::all();
-        
-        $studentsByProgram = $allStudents->groupBy('program')->map(function($students, $program) {
-            return ['program' => $program ?: 'Unassigned', 'count' => $students->count()];
-        })->values();
-        
-        $studentsByYearLevel = $allStudents->groupBy('year_level')->map(function($students, $yearLevel) {
-            return ['year_level' => $yearLevel ?: 'N/A', 'count' => $students->count()];
-        })->sortBy('year_level')->values();
-        
-        $studentsByStatus = $allStudents->groupBy('academic_status')->map(function($students, $status) {
-            return ['academic_status' => $status ?: 'Unknown', 'count' => $students->count()];
-        })->values();
-        
-        $averageGPA = $allStudents->avg('academic.gpa');
+        $data = [
+            'summary' => [
+                'total_students' => 0,
+                'total_faculty' => 0,
+                'total_events' => 0,
+                'total_schedules' => 0,
+                'average_gpa' => 0,
+                'average_teaching_load' => 0,
+            ],
+            'students' => ['by_program' => [], 'by_year_level' => [], 'by_status' => []],
+            'faculty' => ['by_status' => [], 'by_role' => []],
+            'events' => ['by_type' => [], 'upcoming' => []],
+            'schedules' => ['by_semester' => []],
+            'errors' => []
+        ];
 
-        // Faculty Statistics
-        $totalFaculty = Faculty::count();
-        $allFaculty = Faculty::all();
-        
-        $facultyByStatus = $allFaculty->groupBy('employment_status')->map(function($faculty, $status) {
-            return ['employment_status' => $status, 'count' => $faculty->count()];
-        })->values();
-        
-        $facultyByRole = $allFaculty->groupBy('ccs_role')->map(function($faculty, $role) {
-            return ['ccs_role' => $role, 'count' => $faculty->count()];
-        })->values();
-        
-        $averageTeachingLoad = $allFaculty->avg('teaching_load');
+        // 1. Students
+        try {
+            $allStudents = Student::all();
+            $data['summary']['total_students'] = $allStudents->count();
+            $data['summary']['average_gpa'] = round($allStudents->avg('gpa') ?? 0, 2);
+            
+            $data['students']['by_program'] = $allStudents->groupBy('program')->map(fn($s, $p) => 
+                ['program' => $p ?: 'Unassigned', 'count' => $s->count()])->values();
+            
+            $data['students']['by_year_level'] = $allStudents->groupBy('year_level')->map(fn($s, $y) => 
+                ['year_level' => $y ?: 'N/A', 'count' => $s->count()])->sortBy('year_level')->values();
+                
+            $data['students']['by_status'] = $allStudents->groupBy('academic_status')->map(fn($s, $st) => 
+                ['academic_status' => $st ?: 'Unknown', 'count' => $s->count()])->values();
+        } catch (\Throwable $e) {
+            $data['errors'][] = 'Students Error: ' . $e->getMessage();
+        }
 
-        // Event Statistics
-        $totalEvents = Event::count();
-        $allEvents = Event::all();
-        
-        $eventsByType = $allEvents->groupBy('event_type')->map(function($events, $type) {
-            return ['event_type' => $type, 'count' => $events->count()];
-        })->values();
-        
-        $upcomingEvents = Event::where('date', '>=', now())
-            ->orderBy('date')
-            ->limit(5)
-            ->get();
+        // 2. Faculty
+        try {
+            $allFaculty = Faculty::all();
+            $data['summary']['total_faculty'] = $allFaculty->count();
+            $data['summary']['average_teaching_load'] = round($allFaculty->avg('teaching_load') ?? 0, 1);
+            
+            $data['faculty']['by_status'] = $allFaculty->groupBy('employment_status')->map(fn($f, $s) => 
+                ['employment_status' => $s ?: 'Unknown', 'count' => $f->count()])->values();
+                
+            $data['faculty']['by_role'] = $allFaculty->groupBy('ccs_role')->map(fn($f, $r) => 
+                ['ccs_role' => $r ?: 'Staff', 'count' => $f->count()])->values();
+        } catch (\Throwable $e) {
+            $data['errors'][] = 'Faculty Error: ' . $e->getMessage();
+        }
 
-        // Schedule Statistics
-        $totalSchedules = Schedule::count();
-        $allSchedules = Schedule::all();
-        
-        $schedulesBySemester = $allSchedules->groupBy('semester')->map(function($schedules, $semester) {
-            return ['semester' => $semester, 'count' => $schedules->count()];
-        })->values();
+        // 3. Events
+        try {
+            $allEvents = Event::all();
+            $data['summary']['total_events'] = $allEvents->count();
+            $data['events']['by_type'] = $allEvents->groupBy('event_type')->map(fn($e, $t) => 
+                ['event_type' => $t ?: 'General', 'count' => $e->count()])->values();
+                
+            $data['events']['upcoming'] = Event::where('date', '>=', now()->startOfDay())
+                ->orderBy('date')->limit(5)->get();
+        } catch (\Throwable $e) {
+            $data['errors'][] = 'Events Error: ' . $e->getMessage();
+        }
+
+        // 4. Schedules
+        try {
+            $allSchedules = Schedule::all();
+            $data['summary']['total_schedules'] = $allSchedules->count();
+            $data['schedules']['by_semester'] = $allSchedules->groupBy('semester')->map(fn($s, $sm) => 
+                ['semester' => $sm ?: 'N/A', 'count' => $s->count()])->values();
+        } catch (\Throwable $e) {
+            $data['errors'][] = 'Schedules Error: ' . $e->getMessage();
+        }
 
         return response()->json([
             'success' => true,
-            'data' => [
-                'summary' => [
-                    'total_students' => $totalStudents,
-                    'total_faculty' => $totalFaculty,
-                    'total_events' => $totalEvents,
-                    'total_schedules' => $totalSchedules,
-                    'average_gpa' => round($averageGPA, 2),
-                    'average_teaching_load' => round($averageTeachingLoad, 1),
-                ],
-                'students' => [
-                    'by_program' => $studentsByProgram,
-                    'by_year_level' => $studentsByYearLevel,
-                    'by_status' => $studentsByStatus,
-                ],
-                'faculty' => [
-                    'by_status' => $facultyByStatus,
-                    'by_role' => $facultyByRole,
-                ],
-                'events' => [
-                    'by_type' => $eventsByType,
-                    'upcoming' => $upcomingEvents,
-                ],
-                'schedules' => [
-                    'by_semester' => $schedulesBySemester,
-                ],
-            ]
+            'data' => $data
         ]);
     }
 }
