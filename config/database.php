@@ -113,18 +113,18 @@ return [
             'driver' => 'mongodb',
             'dsn' => env('MONGODB_URI', 'mongodb://localhost:27017'),
             'database' => env('DB_DATABASE', 'student_profiling'),
-            'options' => [
-                'connectTimeoutMS' => 15000,
-                'socketTimeoutMS' => 15000,
+            'options' => array_filter([
+                'connectTimeoutMS' => 30000,
+                'socketTimeoutMS' => 30000,
                 'serverSelectionTryOnce' => false,
-                'serverSelectionTimeoutMS' => 15000,
-                'tls' => true,
-                'tlsAllowInvalidCertificates' => env('MONGO_TLS_ALLOW_INVALID_CERTS', false) === 'true',
-                'tlsAllowInvalidHostnames' => env('MONGO_TLS_ALLOW_INVALID_CERTS', false) === 'true',
-                'readPreference' => 'primaryPreferred',
+                'serverSelectionTimeoutMS' => 30000,
+                // Only force TLS for Atlas (SRV) connections; local dev doesn't need it
+                'tls' => str_contains(env('MONGODB_URI', ''), 'mongodb+srv') ? true : null,
+                'tlsAllowInvalidCertificates' => env('MONGO_TLS_ALLOW_INVALID_CERTS', false) === 'true' ? true : null,
+                'tlsAllowInvalidHostnames' => env('MONGO_TLS_ALLOW_INVALID_CERTS', false) === 'true' ? true : null,
                 'retryWrites' => true,
                 'w' => 'majority',
-            ],
+            ], fn ($v) => $v !== null),
         ],
 
     ],

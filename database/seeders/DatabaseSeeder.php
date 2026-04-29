@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
             [
                 'user_id' => 'ADMIN001',
                 'name' => 'Admin User',
-                'password' => bcrypt('password'),
+                'password' => bcrypt('password!'),
                 'role' => 'admin',
             ]
         );
@@ -30,7 +30,7 @@ class DatabaseSeeder extends Seeder
             [
                 'user_id' => 'FAC001',
                 'name' => 'Dr. Maria Santos',
-                'password' => bcrypt('password'),
+                'password' => bcrypt('password!'),
                 'role' => 'faculty',
                 'faculty_id' => 'FAC001',
             ]
@@ -42,7 +42,7 @@ class DatabaseSeeder extends Seeder
             [
                 'user_id' => 'STU001',
                 'name' => 'John Doe',
-                'password' => bcrypt('password'),
+                'password' => bcrypt('password!'),
                 'role' => 'student',
                 'student_id' => '2024-0001',
             ]
@@ -54,7 +54,7 @@ class DatabaseSeeder extends Seeder
             [
                 'user_id' => 'TEST001',
                 'name' => 'Test User',
-                'password' => bcrypt('password'),
+                'password' => bcrypt('password!'),
                 'role' => 'user',
             ]
         );

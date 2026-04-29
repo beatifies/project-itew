@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Auth\LoginRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -23,10 +23,33 @@ class AuthenticatedSessionController extends Controller
                 'password' => 'required',
             ]);
 
+            Log::info('Login attempt', ['email' => $request->email]);
+
             $user = User::where('email', $request->email)->first();
 
-            // Allow raw password match to simplify testing, or fallback to hash match
-            if (!$user || ($request->password !== $user->password && !password_verify($request->password, $user->password))) {
+            if (!$user) {
+                Log::warning('Login failed: user not found', ['email' => $request->email]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid credentials'
+                ], 401);
+            }
+
+            // Check password: support both plain-text (manually inserted) and bcrypt hashes
+            $rawPassword = $user->getRawOriginal('password') ?? $user->password;
+            $passwordMatch = false;
+
+            // First try bcrypt verify (normal flow)
+            if (Hash::check($request->password, $rawPassword)) {
+                $passwordMatch = true;
+            }
+            // Fallback: plain-text match (for manually inserted DB records)
+            elseif ($request->password === $rawPassword) {
+                $passwordMatch = true;
+            }
+
+            if (!$passwordMatch) {
+                Log::warning('Login failed: password mismatch', ['email' => $request->email]);
                 return response()->json([
                     'success' => false,
                     'message' => 'Invalid credentials'
@@ -35,6 +58,8 @@ class AuthenticatedSessionController extends Controller
 
             // Create a Sanctum token for API authentication
             $token = $user->createToken('auth-token')->plainTextToken;
+
+            Log::info('Login successful', ['email' => $request->email, 'role' => $user->role]);
 
             return response()->json([
                 'success' => true,
@@ -49,11 +74,18 @@ class AuthenticatedSessionController extends Controller
                     'faculty_id' => $user->faculty_id ?? null,
                 ]
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            Log::error('Login exception', [
+                'message' => $e->getMessage(),
+                'class' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Login failed: ' . $e->getMessage(),
-                'error' => $e->getMessage()
+                'error' => get_class($e) . ': ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -63,14 +95,14 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): JsonResponse
     {
-        // Revoke all tokens for the user
-        $request->user()->tokens()->delete();
-
-        Auth::guard('web')->logout();
-
-        $request->session()->invalidate();
-
-        $request->session()->regenerateToken();
+        try {
+            // Revoke all tokens for the user
+            if ($request->user()) {
+                $request->user()->currentAccessToken()->delete();
+            }
+        } catch (\Throwable $e) {
+            Log::error('Logout error', ['message' => $e->getMessage()]);
+        }
 
         return response()->json([
             'success' => true,

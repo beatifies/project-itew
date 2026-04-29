@@ -25,6 +25,48 @@ Route::get('/health', function () {
     ]);
 });
 
+// Database Connection Diagnostic Endpoint (Public — remove after debugging)
+Route::get('/db-test', function () {
+    $result = [
+        'timestamp' => now()->toIso8601String(),
+        'php_mongodb_ext' => extension_loaded('mongodb') ? phpversion('mongodb') : 'NOT LOADED',
+        'mongodb_uri_set' => !empty(env('MONGODB_URI')),
+        'mongodb_uri_type' => str_contains(env('MONGODB_URI', ''), 'mongodb+srv') ? 'SRV (Atlas)' : 'standard',
+        'db_connection' => config('database.default'),
+        'db_database' => config('database.connections.mongodb.database'),
+    ];
+
+    try {
+        $connection = \Illuminate\Support\Facades\DB::connection('mongodb');
+        $mongo = $connection->getMongoClient();
+        $db = $mongo->selectDatabase(config('database.connections.mongodb.database'));
+
+        // Test actual connection by running a ping command
+        $pingResult = $db->command(['ping' => 1])->toArray();
+        $result['ping'] = 'ok';
+
+        // Count users
+        $userCount = \App\Models\User::count();
+        $result['user_count'] = $userCount;
+
+        // List user emails (for verification)
+        $users = \App\Models\User::all(['email', 'role', 'name'])->toArray();
+        $result['users'] = array_map(fn($u) => [
+            'email' => $u['email'] ?? 'N/A',
+            'role' => $u['role'] ?? 'N/A',
+            'name' => $u['name'] ?? 'N/A',
+        ], $users);
+
+        $result['status'] = 'connected';
+    } catch (\Throwable $e) {
+        $result['status'] = 'FAILED';
+        $result['error'] = get_class($e) . ': ' . $e->getMessage();
+        $result['error_file'] = $e->getFile() . ':' . $e->getLine();
+    }
+
+    return response()->json($result);
+});
+
 // User Info
 Route::get('/user', function (Request $request) {
     return $request->user();
