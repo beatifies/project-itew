@@ -18,60 +18,23 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->midd
 
 // Health Check Endpoint (Public)
 Route::get('/health', function () {
-    return response()->json([
-        'status' => 'ok',
-        'timestamp' => now()->toIso8601String(),
-        'service' => 'CCS Profiling Backend'
-    ]);
+    return response()->json(['status' => 'ok']);
 });
 
-// Database Connection Diagnostic Endpoint (Public — remove after debugging)
+// Database Connection Diagnostic Endpoint (Public)
 Route::get('/db-test', function () {
-    $result = [
-        'version' => '2.0',
-        'timestamp' => now()->toIso8601String(),
-        'php_mongodb_ext' => extension_loaded('mongodb') ? phpversion('mongodb') : 'NOT LOADED',
-        'mongodb_uri_set' => !empty(env('MONGODB_URI')),
-        'mongodb_uri_type' => str_contains(env('MONGODB_URI', ''), 'mongodb+srv') ? 'SRV (Atlas)' : 'standard',
-        'db_connection' => config('database.default'),
-        'db_database' => config('database.connections.mongodb.database'),
-    ];
     try {
         $db = \DB::connection('mongodb')->getMongoDB();
-        $ping = $db->command(['ping' => 1]);
-        
-        $users = \App\Models\User::all();
-        $admin = \App\Models\User::where('role', 'admin')->first();
-        
-        $token_test = 'Not tested';
-        if ($admin) {
-            try {
-                $token = $admin->createToken('test_token')->plainTextToken;
-                $token_test = 'Success: ' . substr($token, 0, 10) . '...';
-            } catch (\Throwable $te) {
-                $token_test = 'Failed: ' . $te->getMessage();
-            }
-        }
-        
+        $db->command(['ping' => 1]);
         return response()->json([
             'status' => 'connected',
             'database' => \DB::connection('mongodb')->getDatabaseName(),
-            'ping' => 'ok',
-            'user_count' => $users->count(),
-            'token_system' => $token_test,
-            'users' => $users->map(fn($u) => [
-                'email' => $u->email,
-                'role' => $u->role,
-                'name' => $u->name
-            ]),
-            'php_mongodb_ext' => phpversion('mongodb'),
+            'ping' => 'ok'
         ]);
     } catch (\Throwable $e) {
         return response()->json([
             'status' => 'error',
-            'message' => $e->getMessage(),
-            'type' => get_class($e),
-            'line' => $e->getLine()
+            'message' => $e->getMessage()
         ], 500);
     }
 });

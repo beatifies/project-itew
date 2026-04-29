@@ -7,11 +7,6 @@ PORT="${PORT:-8080}"
 # Clear ALL cached config first to avoid stale values from previous deploys
 php artisan optimize:clear
 
-# Re-cache configurations at runtime (not build time)
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-
 # Debug: Show MongoDB URI (masked password)
 if [ -n "$MONGODB_URI" ]; then
   echo "MongoDB URI is set"
