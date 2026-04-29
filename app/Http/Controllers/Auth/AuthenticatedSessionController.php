@@ -85,6 +85,8 @@ class AuthenticatedSessionController extends Controller
         } catch (\Throwable $e) {
             \Log::error('Login error: ' . $e->getMessage(), [
                 'exception' => $e,
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'An error occurred during login',

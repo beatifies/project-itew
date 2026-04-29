@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import Students from './components/Students';
@@ -9,20 +9,34 @@ import Schedules from './components/Schedules';
 import Events from './components/Events';
 import ApiTester from './components/ApiTester';
 
+// Simple Protected Route component
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
+
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/test-api" element={<ApiTester />} />
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/students" element={<Students />} />
-        <Route path="/faculty" element={<Faculty />} />
-        <Route path="/courses" element={<Courses />} />
-        <Route path="/instructions" element={<Instructions />} />
-        <Route path="/schedules" element={<Schedules />} />
-        <Route path="/events" element={<Events />} />
-        <Route path="/analytics" element={<Dashboard />} />
+        
+        {/* Protected Routes */}
+        <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/students" element={<ProtectedRoute><Students /></ProtectedRoute>} />
+        <Route path="/faculty" element={<ProtectedRoute><Faculty /></ProtectedRoute>} />
+        <Route path="/courses" element={<ProtectedRoute><Courses /></ProtectedRoute>} />
+        <Route path="/instructions" element={<ProtectedRoute><Instructions /></ProtectedRoute>} />
+        <Route path="/schedules" element={<ProtectedRoute><Schedules /></ProtectedRoute>} />
+        <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
+        <Route path="/analytics" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        
+        {/* Catch all - redirect to home (which will redirect to login if not authenticated) */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );
