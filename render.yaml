@@ -16,10 +16,9 @@ services:
       - key: APP_KEY
         sync: false
       - key: APP_URL
-        fromService:
-          name: ccs-profiling-backend
-          type: web
-          envVarKey: RENDER_EXTERNAL_URL
+        value: https://project-itew-2onj.onrender.com
+      - key: FRONTEND_URL
+        value: https://project-itew.vercel.app
       - key: DB_CONNECTION
         value: mongodb
       - key: MONGODB_URI
@@ -34,6 +33,14 @@ services:
         value: file
       - key: SESSION_DRIVER
         value: cookie
+      - key: SESSION_LIFETIME
+        value: "120"
+      - key: SESSION_SECURE_COOKIE
+        value: "true"
+      - key: SESSION_SAME_SITE
+        value: none
+      - key: SANCTUM_STATEFUL_DOMAINS
+        value: project-itew.vercel.app
       - key: LOG_CHANNEL
         value: stderr
     healthCheckPath: /api/health

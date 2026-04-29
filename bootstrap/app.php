@@ -19,6 +19,11 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Trust all proxies — required on Render (and most PaaS) where the app
+        // sits behind a load balancer. Without this, Laravel won't detect HTTPS
+        // and SESSION_SECURE_COOKIE / APP_URL scheme won't work correctly.
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
             'role' => \App\Http\Middleware\RoleMiddleware::class,

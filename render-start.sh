@@ -4,8 +4,10 @@ set -e
 # Render sets $PORT for you. We'll default for local Docker runs.
 PORT="${PORT:-8080}"
 
-# Clear and cache configurations at runtime (not build time)
-php artisan config:clear
+# Clear ALL cached config first to avoid stale values from previous deploys
+php artisan optimize:clear
+
+# Re-cache configurations at runtime (not build time)
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
