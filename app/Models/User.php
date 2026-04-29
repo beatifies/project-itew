@@ -72,6 +72,10 @@ class User extends Authenticatable
             'expires_at' => $expiresAt,
         ]);
 
-        return new \Laravel\Sanctum\NewAccessToken($token, $token->getKey().'|'.$plainTextToken);
+        // Return a simple object that matches the shape of NewAccessToken
+        return (object) [
+            'accessToken' => $token,
+            'plainTextToken' => $token->getKey().'|'.$plainTextToken
+        ];
     }
 }
