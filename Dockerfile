@@ -1,5 +1,5 @@
-FROM php:8.2-cli
-# Force fresh build v2.1
+FROM php:8.3-cli
+# Force fresh build v2.2
 
 # Install dependencies
 RUN apt-get update && apt-get install -y \
@@ -13,20 +13,21 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libcurl4-openssl-dev \
     libssl-dev \
+    libicu-dev \
     ca-certificates
 
 # Update CA certificates (critical for TLS)
 RUN update-ca-certificates
 
-# Install MongoDB extension (specific version for better compatibility)
-RUN pecl install mongodb-1.17.0 \
+# Install MongoDB extension (latest version for better compatibility with v5.0 driver)
+RUN pecl install mongodb \
     && docker-php-ext-enable mongodb
 
 # Verify MongoDB extension is loaded
 RUN php -m | grep -i mongodb && php --ri mongodb | head -20
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo pdo_sqlite mbstring zip xml curl
+RUN docker-php-ext-install pdo pdo_sqlite mbstring zip xml curl bcmath intl
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
