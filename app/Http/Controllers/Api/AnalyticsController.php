@@ -21,16 +21,16 @@ class AnalyticsController extends Controller
         $totalStudents = Student::count();
         $allStudents = Student::all();
         
-        $studentsByProgram = $allStudents->groupBy('academic.program')->map(function($students, $program) {
-            return ['program' => $program, 'count' => $students->count()];
+        $studentsByProgram = $allStudents->groupBy('program')->map(function($students, $program) {
+            return ['program' => $program ?: 'Unassigned', 'count' => $students->count()];
         })->values();
         
-        $studentsByYearLevel = $allStudents->groupBy('academic.year_level')->map(function($students, $yearLevel) {
-            return ['year_level' => $yearLevel, 'count' => $students->count()];
+        $studentsByYearLevel = $allStudents->groupBy('year_level')->map(function($students, $yearLevel) {
+            return ['year_level' => $yearLevel ?: 'N/A', 'count' => $students->count()];
         })->sortBy('year_level')->values();
         
-        $studentsByStatus = $allStudents->groupBy('academic.academic_status')->map(function($students, $status) {
-            return ['academic_status' => $status, 'count' => $students->count()];
+        $studentsByStatus = $allStudents->groupBy('academic_status')->map(function($students, $status) {
+            return ['academic_status' => $status ?: 'Unknown', 'count' => $students->count()];
         })->values();
         
         $averageGPA = $allStudents->avg('academic.gpa');
