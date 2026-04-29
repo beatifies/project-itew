@@ -11,18 +11,32 @@ class RoleMiddleware
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Closure  $next
+     * @param  string  ...$roles
+     * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function handle(Request $request, Closure $next, string $role): Response
+    public function handle(Request $request, Closure $next, ...$roles): Response
     {
         if (!auth()->check()) {
             return response()->json(['message' => 'Unauthenticated.'], 401);
         }
 
-        if (auth()->user()->role !== $role) {
-            return response()->json(['message' => 'Unauthorized action.'], 403);
+        $user = auth()->user();
+        
+        // If no roles specified, allow
+        if (empty($roles)) {
+            return $next($request);
         }
 
-        return $next($request);
+        // Check if user has any of the required roles
+        if (in_array($user->role, $roles)) {
+            return $next($request);
+        }
+
+        return response()->json([
+            'message' => 'Unauthorized. Required roles: ' . implode(' or ', $roles),
+            'your_role' => $user->role
+        ], 403);
     }
 }
