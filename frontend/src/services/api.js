@@ -31,9 +31,8 @@ api.interceptors.response.use(
     const isAuthEndpoint = requestUrl.includes('/api/login');
     const hasToken = Boolean(localStorage.getItem('token'));
 
-    // Avoid redirect loops: let login errors and unauthenticated public requests
-    // be handled by the calling component.
-    if (status === 401 && hasToken && !isAuthEndpoint && window.location.pathname !== '/login') {
+    // Redirect to login if unauthorized (401), unless we are already on the login page or hitting an auth endpoint
+    if (status === 401 && !isAuthEndpoint && window.location.pathname !== '/login') {
       localStorage.removeItem('token');
       window.location.href = '/login';
     }
