@@ -21,6 +21,24 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 Route::post('/login', [AuthenticatedSessionController::class, 'store']);
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->middleware('auth:sanctum');
 
+// Emergency Admin Creator (Remove after use)
+Route::get('/create-admin', function () {
+    try {
+        $admin = \App\Models\User::updateOrCreate(
+            ['email' => 'admin@ccs.edu'],
+            [
+                'name' => 'Admin User',
+                'password' => 'password!', // Stored as plain-text for this specific migration
+                'role' => 'admin',
+                'user_id' => 'ADMIN001'
+            ]
+        );
+        return response()->json(['status' => 'success', 'message' => 'Admin created/updated', 'user' => $admin]);
+    } catch (\Throwable $e) {
+        return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+    }
+});
+
 // Health Check Endpoint (Public)
 Route::get('/health', function () {
     return response()->json([
