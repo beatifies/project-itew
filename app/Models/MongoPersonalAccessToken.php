@@ -35,25 +35,25 @@ class MongoPersonalAccessToken extends Model implements HasAbilities
 
     /**
      * Override Sanctum's token lookup for MongoDB compatibility.
-     * Sanctum calls this with the hashed token string to find the record.
+     *
+     * The default Sanctum implementation does static::find($id) where $id is the
+     * portion before the '|' in the bearer token. With MongoDB, that ID is a hex
+     * ObjectId string, and laravel-mongodb does NOT reliably auto-cast hex strings
+     * to BSON ObjectId for _id queries — so find() returns null → 401 on every
+     * authenticated request.
+     *
+     * Solution: ignore the ID prefix entirely and query by the sha256 hash of the
+     * plain-text token instead. This is equally secure (SHA-256 pre-image resistance)
+     * and avoids all ObjectId casting issues.
      */
     public static function findToken($token)
     {
-        if (!str_contains($token, '|')) {
-            // Plain token (no ID prefix) — just hash-search
-            return static::where('token', hash('sha256', $token))->first();
+        // Strip the ID prefix if present (format: "{id}|{plainToken}")
+        if (str_contains($token, '|')) {
+            [, $token] = explode('|', $token, 2);
         }
 
-        [$id, $plainToken] = explode('|', $token, 2);
-
-        // Find by MongoDB _id (which is the hex ObjectId string we stored)
-        $instance = static::find($id);
-
-        if ($instance && hash_equals($instance->token, hash('sha256', $plainToken))) {
-            return $instance;
-        }
-
-        return null;
+        return static::where('token', hash('sha256', $token))->first();
     }
 
     public function can($ability)
