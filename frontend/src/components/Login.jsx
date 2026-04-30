@@ -32,7 +32,17 @@ function Login() {
       if (response.user.faculty_id) {
         localStorage.setItem('facultyId', response.user.faculty_id);
       }
-      navigate('/');
+      // Redirect based on role
+      const role = response.user.role;
+      if (role === 'admin') {
+        navigate('/admin/dashboard');
+      } else if (role === 'faculty') {
+        navigate('/faculty/dashboard');
+      } else if (role === 'student') {
+        navigate('/student/dashboard');
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       console.error('Login error:', err);
       if (err.response?.status === 401) {

@@ -23,7 +23,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
   const menuItemsByRole = {
     admin: [
-      { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
+      { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
       { path: '/students', icon: Users, label: 'Students' },
       { path: '/faculty', icon: GraduationCap, label: 'Faculty' },
       { path: '/courses', icon: BookOpen, label: 'Courses' },
@@ -33,7 +33,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       { path: '/analytics', icon: BarChart3, label: 'Analytics' },
     ],
     faculty: [
-      { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
+      { path: '/faculty/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
       { path: '/students', icon: Users, label: 'Students' },
       { path: '/courses', icon: BookOpen, label: 'Courses' },
       { path: '/instructions', icon: FileText, label: 'Instructions' },
@@ -42,7 +42,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       { path: '/analytics', icon: BarChart3, label: 'Analytics' },
     ],
     student: [
-      { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
+      { path: '/student/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
       { path: '/events', icon: Calendar, label: 'Events' },
     ],
   };
