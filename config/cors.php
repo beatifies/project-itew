@@ -35,9 +35,7 @@ return [
     ],
 
     // Regex patterns — covers ALL *.vercel.app preview/deployment URLs
-    'allowed_origins_patterns' => [
-        '#^https://project-itew[a-z0-9\-]*\.vercel\.app$#',
-    ],
+    'allowed_origins' => ['*'],
 
     'allowed_headers' => ['*'],
 
