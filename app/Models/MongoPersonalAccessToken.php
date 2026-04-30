@@ -33,6 +33,29 @@ class MongoPersonalAccessToken extends Model implements HasAbilities
         return $this->morphTo();
     }
 
+    /**
+     * Override Sanctum's token lookup for MongoDB compatibility.
+     * Sanctum calls this with the hashed token string to find the record.
+     */
+    public static function findToken($token)
+    {
+        if (!str_contains($token, '|')) {
+            // Plain token (no ID prefix) — just hash-search
+            return static::where('token', hash('sha256', $token))->first();
+        }
+
+        [$id, $plainToken] = explode('|', $token, 2);
+
+        // Find by MongoDB _id (which is the hex ObjectId string we stored)
+        $instance = static::find($id);
+
+        if ($instance && hash_equals($instance->token, hash('sha256', $plainToken))) {
+            return $instance;
+        }
+
+        return null;
+    }
+
     public function can($ability)
     {
         return in_array('*', $this->abilities) ||

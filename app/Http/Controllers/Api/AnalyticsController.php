@@ -38,11 +38,15 @@ class AnalyticsController extends Controller
             $data['summary']['total_students'] = $allStudents->count();
             $data['summary']['average_gpa'] = round($allStudents->avg('gpa') ?? 0, 2);
             $data['students']['by_program'] = $allStudents->groupBy('program')->map(fn($s, $p) => ['program' => $p ?: 'Unassigned', 'count' => $s->count()])->values();
+            $data['students']['by_year_level'] = $allStudents->groupBy('year_level')->map(fn($s, $y) => ['year_level' => $y ?: 'N/A', 'count' => $s->count()])->values();
+            $data['students']['by_status'] = $allStudents->groupBy('status')->map(fn($s, $st) => ['status' => $st ?: 'Unknown', 'count' => $s->count()])->values();
             
             // Faculty
             $allFaculty = Faculty::all();
             $data['summary']['total_faculty'] = $allFaculty->count();
             $data['summary']['average_teaching_load'] = round($allFaculty->avg('teaching_load') ?? 0, 1);
+            $data['faculty']['by_role'] = $allFaculty->groupBy('ccs_role')->map(fn($f, $r) => ['ccs_role' => $r ?: 'Unassigned', 'count' => $f->count()])->values();
+            $data['faculty']['by_status'] = $allFaculty->groupBy('status')->map(fn($f, $s) => ['status' => $s ?: 'Unknown', 'count' => $f->count()])->values();
             
             // Events
             $allEvents = Event::all();
@@ -53,6 +57,7 @@ class AnalyticsController extends Controller
             $allSchedules = Schedule::all();
             $data['summary']['total_schedules'] = $allSchedules->count();
             $data['schedules']['by_semester'] = $allSchedules->groupBy('semester')->map(fn($s, $sm) => ['semester' => $sm ?: 'N/A', 'count' => $s->count()])->values();
+
         } catch (\Throwable $e) {
             \Log::error('Analytics Error: ' . $e->getMessage());
             $data['errors'][] = $e->getMessage();

@@ -46,7 +46,9 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            // NOTE: Do NOT cast password to 'hashed' here.
+            // The AuthController handles both plain-text and bcrypt passwords manually.
+            // The 'hashed' cast would auto-bcrypt on every save and break the plain-text flow.
         ];
     }
 
@@ -70,12 +72,17 @@ class User extends Authenticatable
             'token' => hash('sha256', $plainTextToken),
             'abilities' => $abilities,
             'expires_at' => $expiresAt,
+            'tokenable_id' => (string) $this->getKey(),
+            'tokenable_type' => get_class($this),
         ]);
 
-        // Return a simple object that matches the shape of NewAccessToken
+        // Sanctum splits the bearer token on '|' and uses the left side as the record ID.
+        // We use the MongoDB _id (hex string) — MongoPersonalAccessToken::find() handles this.
+        $tokenId = (string) $token->getKey();
+
         return (object) [
             'accessToken' => $token,
-            'plainTextToken' => $token->getKey().'|'.$plainTextToken
+            'plainTextToken' => $tokenId . '|' . $plainTextToken
         ];
     }
 }

@@ -10,7 +10,8 @@ const api = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
-  withCredentials: true, // Important for Sanctum cookies
+  // NOTE: withCredentials is NOT needed for Bearer token auth (Sanctum API tokens).
+  // It was causing CORS preflight failures on cross-origin Vercel → Render requests.
 });
 
 // Add auth token to requests
@@ -22,18 +23,20 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle auth errors
+// Handle auth errors globally
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error.response?.status;
     const requestUrl = error.config?.url || '';
     const isAuthEndpoint = requestUrl.includes('/api/login');
-    const hasToken = Boolean(localStorage.getItem('token'));
 
-    // Redirect to login if unauthorized (401), unless we are already on the login page or hitting an auth endpoint
+    // Only redirect to login on 401 if we're NOT on the login page and NOT hitting login endpoint.
+    // A 403 means the user IS authenticated but lacks permission — do NOT clear the token.
     if (status === 401 && !isAuthEndpoint && window.location.pathname !== '/login') {
       localStorage.removeItem('token');
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('userId');
       window.location.href = '/login';
     }
     return Promise.reject(error);

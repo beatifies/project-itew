@@ -40,11 +40,14 @@ function Dashboard() {
       console.error('Dashboard error:', err);
       
       if (err.response?.status === 401) {
-        setError('Authentication required. Please login first.');
-      } else if (err.code === 'ERR_NETWORK') {
-        setError(`Cannot connect to backend server (${API_URL}).`);
+        // Token invalid/expired — interceptor will redirect, but set error just in case
+        setError('Your session has expired. Please log in again.');
+      } else if (err.response?.status === 403) {
+        setError('ACCESS_RESTRICTED');
+      } else if (err.code === 'ERR_NETWORK' || err.code === 'ECONNABORTED') {
+        setError(`Cannot connect to backend server. The server may be waking up (Render free tier). Please wait a moment and retry.`);
       } else {
-        setError('Failed to load dashboard data. Backend returned: ' + (err.response?.status || 'unknown status'));
+        setError('Failed to load dashboard data. Backend returned: ' + (err.response?.status || 'unknown error'));
       }
     } finally {
       setLoading(false);
@@ -57,6 +60,41 @@ function Dashboard() {
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-orange-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600 text-lg">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error === 'ACCESS_RESTRICTED') {
+    const userRole = localStorage.getItem('userRole') || 'unknown';
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="bg-white p-8 rounded-xl shadow-2xl max-w-md w-full border border-orange-200">
+          <div className="text-center mb-6">
+            <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-10 h-10 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m0 0v2m0-2h2m-2 0H10m2-9V4m0 0L8 8m4-4l4 4" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">🔒 Access Restricted</h2>
+            <p className="text-gray-600 mb-2">
+              Your account role (<span className="font-semibold text-orange-600">{userRole}</span>) does not have permission to view the admin dashboard.
+            </p>
+            <p className="text-sm text-gray-500 mb-6">
+              The analytics dashboard is only accessible to <strong>admin</strong> and <strong>faculty</strong> accounts. Please contact your administrator.
+            </p>
+            <button
+              onClick={() => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('userRole');
+                localStorage.removeItem('userId');
+                window.location.href = '/login';
+              }}
+              className="w-full px-6 py-3 bg-gradient-to-r from-orange-600 to-orange-700 text-white rounded-lg hover:from-orange-700 hover:to-orange-800 transition-all duration-200 font-semibold shadow-lg"
+            >
+              Back to Login
+            </button>
+          </div>
         </div>
       </div>
     );
